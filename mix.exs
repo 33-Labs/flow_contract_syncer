@@ -49,7 +49,8 @@ defmodule FlowContractSyncer.MixProject do
       {:gettext, "~> 0.18"},
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
-      {:finch, "~> 0.13.0"}
+      {:finch, "~> 0.13.0"},
+      {:nimble_csv, "~> 1.2"}
     ]
   end
 

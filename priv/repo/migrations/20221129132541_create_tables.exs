@@ -56,7 +56,7 @@ defmodule FlowContractSyncer.Repo.Migrations.CreateTables do
       # 0: normal
       # 1: removed
       add :status, :integer, null: false
-      add :code, :string, null: false
+      add :code, :text, null: false
 
       timestamps()
     end

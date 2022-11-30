@@ -3,16 +3,17 @@ defmodule FlowContractSyncer.Client do
   Client for interacting with Flow blockchain 
   """
 
-  def get_latest_block_height(opts) do
-    case get_latest_block_header(opts) do
+  alias FlowContractSyncer.Schema.Network
+
+  def get_latest_block_height(%Network{} = network) do
+    case get_latest_block_header(network) do
       {:ok, [%{"header" => %{"height" => height}}]} -> String.to_integer(height)   
       _otherwise -> nil
     end
   end
 
-  def get_latest_block_header(opts) do
-    network = opts[:network] || :testnet
-    endpoint = network |> access_api() |> Path.join("blocks")
+  def get_latest_block_header(%Network{} = network) do
+    endpoint = network.endpoint |> Path.join("blocks")
 
     query = %{ "height" => "sealed" }
     encoded_query = URI.encode_query(query, :rfc3986)
@@ -24,10 +25,9 @@ defmodule FlowContractSyncer.Client do
     |> handle_response() 
   end
 
-  # e.g. FlowContractSyncer.Client.get_events("flow.AccountContractAdded", 86934521, 86934721, network: :testnet)
-  def get_events(type, start_height, end_height, opts) do
-    network = opts[:network] || :testnet
-    endpoint = network |> access_api() |> Path.join("events")
+  # e.g. FlowContractSyncer.Client.get_events(network, "flow.AccountContractAdded", 86934521, 86934721, network: :testnet)
+  def get_events(%Network{} = network, type, start_height, end_height) do
+    endpoint = network.endpoint |> Path.join("events")
 
     query = %{
       "type" => type,
@@ -50,9 +50,8 @@ defmodule FlowContractSyncer.Client do
   # }
   # So we cannot get the old versions of a contract
   # e.g. FlowContractSyncer.ContractSyncer.get_contract("0x25ec8cce566c4ca7", "LUSD", block_height: 86942759)
-  def execute_script(encoded_script, encoded_arguments, opts) do
-    network = opts[:network] || :testnet
-    endpoint = network |> access_api() |> Path.join("scripts")
+  def execute_script(%Network{} = network, encoded_script, encoded_arguments, opts) do
+    endpoint = network.endpoint |> Path.join("scripts")
 
     url =
       case opts[:block_height] do
@@ -91,10 +90,5 @@ defmodule FlowContractSyncer.Client do
 
   defp handle_response(error) do
     {:resp_error, error}
-  end
-
-  defp access_api(network) when network in [:mainnet, :testnet] do
-    endpoints = Application.get_env(:flow_contract_syncer, :access_api)
-    endpoints[network]
   end
 end

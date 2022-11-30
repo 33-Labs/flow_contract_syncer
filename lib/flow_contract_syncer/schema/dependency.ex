@@ -14,7 +14,7 @@ defmodule FlowContractSyncer.Schema.Dependency do
   @required_fields ~w(contract_id dependency_id)a
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, @attrs)
+    |> cast(params, @required_fields)
     |> unique_constraint(
       [:contract_id, :dependency_id],
       name: :dependencies_contract_id_dependency_id_index
