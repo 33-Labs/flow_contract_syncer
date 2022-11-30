@@ -26,6 +26,7 @@ defmodule FlowContractSyncer.Client do
   end
 
   # e.g. FlowContractSyncer.Client.get_events(network, "flow.AccountContractAdded", 86934521, 86934721, network: :testnet)
+  # the range rule is [start, end]
   def get_events(%Network{} = network, type, start_height, end_height) do
     endpoint = network.endpoint |> Path.join("events")
 

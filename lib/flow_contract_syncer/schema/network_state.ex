@@ -30,12 +30,12 @@ defmodule FlowContractSyncer.Schema.NetworkState do
     get_synced_height(network_id)
   end
 
-  def get_synced_height(network_id) do
+  def get_synced_height(%Network{id: network_id}) do
     %{synced_height: synced_height} = get_by_network_id(network_id)
     synced_height
   end
 
-  def update_height(network_id, height) do
+  def update_height(%Network{id: network_id}, height) do
     %{synced_height: synced_height} = model = get_by_network_id(network_id)
 
     model
