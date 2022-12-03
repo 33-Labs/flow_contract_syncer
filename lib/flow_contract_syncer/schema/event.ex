@@ -2,7 +2,7 @@ defmodule FlowContractSyncer.Schema.Event do
   @moduledoc false
 
   use Ecto.Schema
-  import Ecto.Changeset
+  import Ecto.{Changeset, Query}
 
   alias FlowContractSyncer.{Repo, Utils}
   alias FlowContractSyncer.Schema.{Contract, Network}
@@ -45,7 +45,6 @@ defmodule FlowContractSyncer.Schema.Event do
     |> validate_length(:address, is: 18)
     |> unique_constraint([:network_id, :digest], name: :events_network_id_digest_index)
   end
-
 
   # raw event:
   # %{
@@ -95,6 +94,20 @@ defmodule FlowContractSyncer.Schema.Event do
   def new(event, block_height, %Network{name: name}) do
     Logger.error("[#{__MODULE__}] Unknown event detected: #{inspect(event)} at height: #{block_height} on #{name}")
     {:error, :unknown_event}
+  end
+
+  def unprocessed(limit \\ 100) do
+    __MODULE__
+    |> where(processed: false)
+    |> order_by(asc: :block_height, asc: :tx_index, asc: :index)
+    |> limit(^limit)
+    |> Repo.all()
+  end
+
+  def to_processed!(%__MODULE__{} = event) do
+    event
+    |> changeset(%{processed: true})
+    |> Repo.update!()
   end
 
   defp calc_event_digest(event, block_height) do

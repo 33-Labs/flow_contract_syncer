@@ -1,12 +1,84 @@
 defmodule FlowContractSyncer.ContractSyncer do
   @moduledoc false
 
+  use Task
+  import Ecto.Query
+
   require Logger
 
   alias FlowContractSyncer.{Client, Repo, Utils}
-  alias FlowContractSyncer.Schema.{Contract, Dependency, Network}
+  alias FlowContractSyncer.Schema.{Contract, Dependency, Event, Network, NetworkState}
 
-  def sync_contract(%Network{id: network_id} = network, address, name) do
+  # 100ms
+  @interval 100
+  @chunk_size 250
+  @timeout 5000
+
+  @added_event "flow.AccountContractAdded"
+  @updated_event "flow.AccountContractUpdated"
+  @removed_event "flow.AccountContractRemoved"
+
+  def start_link(%Network{name: name, id: id} = network) do
+    {:ok, pid} = Task.start_link(__MODULE__, :contract_sync, [network])
+    Process.register(pid, :"#{name}_#{id}_contract_syncer")
+    {:ok, pid}
+  end
+
+  def contract_sync(%Network{} = network) do
+    Event.unprocessed()
+    |> Enum.each(fn event ->
+      case sync_contract_from_event(network, event) do
+        {:ok, _} -> Event.to_processed!(event)
+        error ->
+          Logger.error("[#{__MODULE__}__] failed to sync contract for event: #{event.id}. error: #{inspect(error)}")
+          {:error, :sync_failed}
+      end
+    end)
+  end
+
+  def sync_contract_from_event(%Network{} = network, %Event{
+    address: address,
+    contract_name: name,
+    type: type
+  }) when type in [:added, :updated, :removed] do
+    case get_contract_code(network, address, name) do
+      {:ok, code} ->
+        uuid = Contract.create_uuid(address, name)
+        insert_or_update_contract(
+          %Contract{network_id: network.id, uuid: uuid, code: code},
+          get_status(type)
+        )
+      error ->
+        error 
+    end
+  end
+
+  defp get_status(type) when type in [:added, :updated], do: :normal
+  defp get_status(:removed), do: :removed
+
+  def insert_or_update_contract(
+    %Contract{network_id: network_id, uuid: uuid, code: code} = contract,
+    status
+  ) when code != "" and status in [:normal, :removed] do
+    Contract
+    |> where(network_id: ^network_id, uuid: ^uuid)
+    |> Repo.one()
+    |> case do
+      %Contract{} = old_contract -> old_contract
+      nil -> contract
+    end
+    |> Contract.changeset(%{
+      code: code,
+      status: status
+    })
+    |> Repo.insert_or_update()
+  end
+
+
+
+
+
+  def sync_and_create_contract(%Network{id: network_id} = network, address, name) do
     case get_contract_code(network, address, name) do
       {:ok, code} ->
         uuid = "A.#{String.replace(address, "0x", "")}.#{name}"
@@ -61,7 +133,7 @@ defmodule FlowContractSyncer.ContractSyncer do
           # What if the contract has been removed? 
           # -> Then the contract code should be empty?
           IO.inspect "address: #{address} contract_name: #{contract_name}"
-          case sync_contract(contract.network, address, contract_name) do
+          case sync_and_create_contract(contract.network, address, contract_name) do
             {:ok, %Contract{id: dependency_id}} ->
               %Dependency{}
               |> Dependency.changeset(%{
