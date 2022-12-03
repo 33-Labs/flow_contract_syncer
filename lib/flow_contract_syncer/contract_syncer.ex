@@ -7,7 +7,7 @@ defmodule FlowContractSyncer.ContractSyncer do
   require Logger
 
   alias FlowContractSyncer.{Client, Repo, Utils}
-  alias FlowContractSyncer.Schema.{Contract, Dependency, Event, Network, NetworkState}
+  alias FlowContractSyncer.Schema.{Contract, ContractEvent, Dependency, Network, NetworkState}
 
   # 100ms
   @interval 100
@@ -25,10 +25,10 @@ defmodule FlowContractSyncer.ContractSyncer do
   end
 
   def contract_sync(%Network{} = network) do
-    Event.unprocessed()
+    ContractEvent.unprocessed()
     |> Enum.each(fn event ->
       case sync_contract_from_event(network, event) do
-        {:ok, _} -> Event.to_processed!(event)
+        {:ok, _} -> ContractEvent.to_processed!(event)
         error ->
           Logger.error("[#{__MODULE__}__] failed to sync contract for event: #{event.id}. error: #{inspect(error)}")
           {:error, :sync_failed}
@@ -36,7 +36,7 @@ defmodule FlowContractSyncer.ContractSyncer do
     end)
   end
 
-  def sync_contract_from_event(%Network{} = network, %Event{
+  def sync_contract_from_event(%Network{} = network, %ContractEvent{
     address: address,
     contract_name: name,
     type: type

@@ -1,4 +1,4 @@
-defmodule FlowContractSyncer.Schema.Event do
+defmodule FlowContractSyncer.Schema.ContractEvent do
   @moduledoc false
 
   use Ecto.Schema
@@ -11,7 +11,7 @@ defmodule FlowContractSyncer.Schema.Event do
   @updated_event "flow.AccountContractUpdated"
   @removed_event "flow.AccountContractRemoved"
 
-  schema "events" do
+  schema "contract_events" do
     belongs_to :network, Network
     belongs_to :contract, Contract
 

@@ -1,4 +1,4 @@
-defmodule FlowContractSyncer.EventSyncer do
+defmodule FlowContractSyncer.ContractEventSyncer do
   @moduledoc false
 
   use Task
@@ -6,7 +6,7 @@ defmodule FlowContractSyncer.EventSyncer do
   require Logger
 
   alias FlowContractSyncer.{Client, Repo}
-  alias FlowContractSyncer.Schema.{Event, Network, NetworkState}
+  alias FlowContractSyncer.Schema.{ContractEvent, Network, NetworkState}
 
   # 100ms
   @sync_interval 100
@@ -103,7 +103,7 @@ defmodule FlowContractSyncer.EventSyncer do
   defp save_events(%Network{} = network, events, end_height) do
     Repo.transaction(fn ->
       events
-      |> Enum.map(& Event.new(&1, network))
+      |> Enum.map(& ContractEvent.new(&1, network))
       |> Enum.filter(& is_tuple(&1) and elem(&1, 0) == :ok)
       |> Enum.each(fn {:ok, changeset} ->
         Repo.insert!(changeset)

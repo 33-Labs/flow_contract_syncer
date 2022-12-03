@@ -52,6 +52,10 @@ defmodule FlowContractSyncer.Schema.Contract do
     |> unique_constraint([:network_id, :uuid], name: :contracts_network_id_uuid_index)
   end
 
+  def create_uuid(address, name) do
+    "A.#{String.replace(address, "0x", "")}.#{name}"
+  end
+
   def extract_imports(%__MODULE__{code: code}) do
     code
     |> remove_comments()

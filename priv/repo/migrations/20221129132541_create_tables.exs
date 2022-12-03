@@ -19,7 +19,7 @@ defmodule FlowContractSyncer.Repo.Migrations.CreateTables do
 
     create unique_index("network_states", [:network_id], name: :network_states_network_id_index)
 
-    create table("events") do
+    create table("contract_events") do
       add :network_id, :bigint, null: false
       # used as uuid
       add :digest, :string, null: false
@@ -43,9 +43,9 @@ defmodule FlowContractSyncer.Repo.Migrations.CreateTables do
       timestamps()
     end
 
-    create unique_index("events", [:network_id, :digest], name: :events_network_id_digest_index)
-    create index("events", [:network_id, :address, :contract_name])
-    create index("events", [:network_id, :processed])
+    create unique_index("contract_events", [:network_id, :digest], name: :events_network_id_digest_index)
+    create index("contract_events", [:network_id, :address, :contract_name])
+    create index("contract_events", [:network_id, :processed])
 
     create table("contracts") do
       add :network_id, :bigint, null: false
