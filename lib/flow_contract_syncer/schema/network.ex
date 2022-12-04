@@ -19,11 +19,19 @@ defmodule FlowContractSyncer.Schema.Network do
     |> unique_constraint([:name], name: :networks_name_index)
   end
 
-  def contract_event_chunk_size(%__MODULE__{config: config}) do
-    config["contract_event_chunk_size"]
+  def contract_event_sync_chunk_size(%__MODULE__{config: config}) do
+    config["contract_event_sync_chunk_size"]
   end
 
   def contract_event_sync_interval(%__MODULE__{config: config}) do
     config["contract_event_sync_interval"]
+  end
+
+  def contract_sync_chunk_size(%__MODULE__{config: config}) do
+    config["contract_sync_chunk_size"]
+  end
+
+  def contract_sync_interval(%__MODULE__{config: config}) do
+    config["contract_sync_interval"]
   end
 end

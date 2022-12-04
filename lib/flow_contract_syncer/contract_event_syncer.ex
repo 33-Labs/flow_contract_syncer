@@ -43,7 +43,7 @@ defmodule FlowContractSyncer.ContractEventSyncer do
   # What if end_height > latest_height?
   def do_event_sync(network, synced_height, latest_height)
     when synced_height < latest_height do
-    chunk_size = Network.contract_event_chunk_size(network) || @chunk_size
+    chunk_size = Network.contract_event_sync_chunk_size(network) || @chunk_size
 
     start_height = synced_height + 1
     end_height = min(start_height + chunk_size, latest_height)

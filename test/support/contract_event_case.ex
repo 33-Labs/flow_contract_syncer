@@ -12,7 +12,9 @@ defmodule FlowContractSyncer.ContractEventCase do
         min_sync_height: 1000,
         config: %{
           "contract_event_sync_interval" => 5000,
-          "contract_event_chunk_size" => 10
+          "contract_event_sync_chunk_size" => 10,
+          "contract_sync_interval" => 5000,
+          "contract_sync_chunk_size" => 10
         }
       })
       |> Repo.insert!()

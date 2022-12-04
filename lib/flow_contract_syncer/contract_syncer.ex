@@ -9,16 +9,14 @@ defmodule FlowContractSyncer.ContractSyncer do
   alias FlowContractSyncer.{Client, Repo, Utils}
   alias FlowContractSyncer.Schema.{Contract, ContractEvent, Dependency, Network, NetworkState}
 
-  # 100ms
-  @interval 100
-  @chunk_size 250
+  # 3s
+  @interval 3000
+  @chunk_size 20
   @timeout 5000
 
   @added_event "flow.AccountContractAdded"
   @updated_event "flow.AccountContractUpdated"
   @removed_event "flow.AccountContractRemoved"
-
-  @client Application.get_env(:flow_contract_syncer, :client) || Client
 
   def start_link(%Network{name: name, id: id} = network) do
     {:ok, pid} = Task.start_link(__MODULE__, :contract_sync, [network])
@@ -27,15 +25,25 @@ defmodule FlowContractSyncer.ContractSyncer do
   end
 
   def contract_sync(%Network{} = network) do
-    ContractEvent.unprocessed()
+    chunk_size = Network.contract_sync_chunk_size(network) || @chunk_size
+
+    ContractEvent.unprocessed(chunk_size)
     |> Enum.each(fn event ->
       case sync_contract_from_event(network, event) do
         {:ok, _} -> ContractEvent.to_processed!(event)
         error ->
-          Logger.error("[#{__MODULE__}__] failed to sync contract for event: #{event.id}. error: #{inspect(error)}")
+          Logger.error("[#{__MODULE__}] failed to sync contract for event: #{event.id}. error: #{inspect(error)}")
           {:error, :sync_failed}
       end
     end)
+
+    sync_interval = Network.contract_sync_interval(network) || @interval
+
+    receive do
+      :contract_sync -> contract_sync(network)
+    after
+      sync_interval -> contract_sync(network)
+    end
   end
 
   def sync_contract_from_event(%Network{} = network, %ContractEvent{
@@ -44,12 +52,19 @@ defmodule FlowContractSyncer.ContractSyncer do
     type: type
   }) when type in [:added, :updated, :removed] do
     case get_contract_code(network, address, name) do
-      {:ok, code} ->
+      {:ok, raw_code} ->
         uuid = Contract.create_uuid(address, name)
-        insert_or_update_contract(
-          %Contract{network_id: network.id, uuid: uuid, code: code},
-          get_status(type)
-        )
+
+        # if the code is nil(maybe the contract is deleted?), we don't delete the old code data
+        base =
+          if is_nil(raw_code) do
+            %Contract{network_id: network.id, uuid: uuid, address: address, name: name}
+          else
+            %Contract{network_id: network.id, uuid: uuid, code: raw_code, address: address, name: name}
+          end
+
+        insert_or_update_contract(base, get_status(type))
+
       error ->
         error 
     end
@@ -61,7 +76,7 @@ defmodule FlowContractSyncer.ContractSyncer do
   def insert_or_update_contract(
     %Contract{network_id: network_id, uuid: uuid, code: code} = contract,
     status
-  ) when code != "" and status in [:normal, :removed] do
+  ) when status in [:normal, :removed] do
     Contract
     |> where(network_id: ^network_id, uuid: ^uuid)
     |> Repo.one()
@@ -156,7 +171,7 @@ defmodule FlowContractSyncer.ContractSyncer do
     encoded_address = encode_address(address)
     encoded_name = encode_string(name)
 
-    res = @client.execute_script(
+    res = client_impl().execute_script(
       network,
       script,
       [encoded_address, encoded_name], 
@@ -177,8 +192,18 @@ defmodule FlowContractSyncer.ContractSyncer do
   end
 
   defp do_decode_code(%{
-    "type" => "Array",
-    "value" => encoded_bytes
+    "type" => "Optional",
+    "value" => nil
+  }) do
+    nil
+  end
+
+  defp do_decode_code(%{
+    "type" => "Optional",
+    "value" => %{
+      "type" => "Array",
+      "value" => encoded_bytes
+    }
   }) when is_list(encoded_bytes) do
     encoded_bytes
     |> Enum.map(fn
@@ -189,12 +214,12 @@ defmodule FlowContractSyncer.ContractSyncer do
 
   defp get_contract_script do
     """
-    pub fun main(address: Address, contractName: String): [UInt8] {
+    pub fun main(address: Address, contractName: String): [UInt8]? {
       let account = getAccount(address)
       if let contract = account.contracts.get(name: contractName) {
           return contract.code
       }
-      return []
+      return nil
     }
     """
     |> Base.encode64()
@@ -212,5 +237,9 @@ defmodule FlowContractSyncer.ContractSyncer do
     %{"type" => "String", "value" => value}
     |> Jason.encode!()
     |> Base.encode64()
+  end
+
+  defp client_impl do
+    Application.get_env(:flow_contract_syncer, :client) || Client
   end
 end

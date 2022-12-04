@@ -39,12 +39,28 @@ defmodule FlowContractSyncer.ContractEventSyncerTest do
 
     {:ok, _} = ContractEventSyncer.start_link(network)
     Process.sleep(500)
-    assert events_count() == 3
-  end
 
-  defp events_count do
-    ContractEvent
-    |> Repo.all()
-    |> Enum.count()
+    [event_0, event_1, event_2] = ContractEvent |> Repo.all()
+
+    assert event_0.type == :added
+    assert event_0.contract_name == "LUSD"
+    assert event_0.address == "0x25ec8cce566c4ca7"
+    assert event_0.block_height == 5
+    assert event_0.tx_index == 0
+    assert event_0.index == 1
+
+    assert event_1.type == :updated
+    assert event_1.contract_name == "LUSD"
+    assert event_1.address == "0x25ec8cce566c4ca7"
+    assert event_1.block_height == 15
+    assert event_1.tx_index == 1
+    assert event_1.index == 1
+
+    assert event_2.type == :removed
+    assert event_2.contract_name == "LUSD"
+    assert event_2.address == "0x25ec8cce566c4ca7"
+    assert event_2.block_height == 25
+    assert event_2.tx_index == 2
+    assert event_2.index == 1
   end
 end

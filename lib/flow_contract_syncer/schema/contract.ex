@@ -28,7 +28,7 @@ defmodule FlowContractSyncer.Schema.Contract do
     timestamps()
   end
 
-  @required_fields ~w(network_id uuid address name status code)a
+  @required_fields ~w(network_id uuid address name status)a
   def changeset(struct, params \\ %{}) do
     params =
       case Map.get(params, :address) do
