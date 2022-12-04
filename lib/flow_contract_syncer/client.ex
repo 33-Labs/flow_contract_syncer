@@ -3,31 +3,25 @@ defmodule FlowContractSyncer.Client do
   Client for interacting with Flow blockchain 
   """
 
+  require Logger
+
   alias FlowContractSyncer.Schema.Network
 
+  @behaviour FlowContractSyncer.ClientBehaviour
+
+  @impl true
   def get_latest_block_height(%Network{} = network) do
     case get_latest_block_header(network) do
-      {:ok, [%{"header" => %{"height" => height}}]} -> String.to_integer(height)   
-      _otherwise -> nil
+      {:ok, [%{"header" => %{"height" => height}}]} -> {:ok, String.to_integer(height)}
+      _otherwise -> {:error, :get_height_failed}
     end
-  end
-
-  def get_latest_block_header(%Network{} = network) do
-    endpoint = network.endpoint |> Path.join("blocks")
-
-    query = %{ "height" => "sealed" }
-    encoded_query = URI.encode_query(query, :rfc3986)
-
-    url = "#{endpoint}?#{encoded_query}"
-
-    Finch.build(:get, url, [{"Content-Type", "application/json"}])
-    |> Finch.request(MyFinch)
-    |> handle_response() 
   end
 
   # e.g. FlowContractSyncer.Client.get_events(network, "flow.AccountContractAdded", 86934521, 86934721, network: :testnet)
   # the range rule is [start, end]
-  def get_events(%Network{} = network, type, start_height, end_height) do
+  @impl true
+  def get_events(%Network{} = network, type, start_height, end_height)
+    when is_integer(start_height) and is_integer(end_height) do
     endpoint = network.endpoint |> Path.join("events")
 
     query = %{
@@ -51,6 +45,7 @@ defmodule FlowContractSyncer.Client do
   # }
   # So we cannot get the old versions of a contract
   # e.g. FlowContractSyncer.ContractSyncer.get_contract("0x25ec8cce566c4ca7", "LUSD", block_height: 86942759)
+  @impl true
   def execute_script(%Network{} = network, encoded_script, encoded_arguments, opts) do
     endpoint = network.endpoint |> Path.join("scripts")
 
@@ -74,18 +69,35 @@ defmodule FlowContractSyncer.Client do
     |> handle_response()
   end
 
+  defp get_latest_block_header(%Network{} = network) do
+    endpoint = network.endpoint |> Path.join("blocks")
+
+    query = %{ "height" => "sealed" }
+    encoded_query = URI.encode_query(query, :rfc3986)
+
+    url = "#{endpoint}?#{encoded_query}"
+
+    Finch.build(:get, url, [{"Content-Type", "application/json"}])
+    |> Finch.request(MyFinch)
+    |> handle_response() 
+  end
+
   defp handle_response({:ok, %{status: 200, body: body}}) do
     case Jason.decode(body) do
       {:ok, content} -> {:ok, content}
-      error -> {:resp_error, :decode_error}
+      error -> 
+        Logger.error("#{inspect(error)}")
+        {:resp_error, :decode_error}
     end
   end
 
   defp handle_response({:ok, %{status: status, body: body}}) do
     case Jason.decode(body) do
       {:ok, %{"code" => code, "message" => message}} ->
-        {:error, status, "#{code}_#{message}"}
-      error -> {:resp_error, :decode_error}
+        {:error, :"#{status}_#{code}_#{message}"}
+      error ->
+        Logger.error("#{inspect(error)}")
+        {:resp_error, :decode_error}
     end
   end
 

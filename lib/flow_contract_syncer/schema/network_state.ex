@@ -7,7 +7,7 @@ defmodule FlowContractSyncer.Schema.NetworkState do
   alias FlowContractSyncer.Repo
   alias FlowContractSyncer.Schema.Network
 
-  schema "chain_states" do
+  schema "network_states" do
     belongs_to :network, Network
     field :synced_height, :integer
   
@@ -23,11 +23,10 @@ defmodule FlowContractSyncer.Schema.NetworkState do
   end
 
   def get_by_network_id(network_id) do
-    Repo.get_by(__MODULE__, network_id: network_id) || %__MODULE__{}
-  end
-
-  def get_synced_height(%Network{id: network_id}) do
-    get_synced_height(network_id)
+    case Repo.get_by(__MODULE__, network_id: network_id) do
+      nil -> %__MODULE__{} |> changeset(%{network_id: network_id, synced_height: 0}) |> Repo.insert!()
+      state -> state
+    end
   end
 
   def get_synced_height(%Network{id: network_id}) do

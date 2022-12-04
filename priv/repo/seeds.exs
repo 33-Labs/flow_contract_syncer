@@ -20,7 +20,11 @@ alias FlowContractSyncer.Schema.{Contract, Network}
 |> Network.changeset(%{
   name: "mainnet", 
   endpoint: "https://rest-mainnet.onflow.org/v1",
-  min_sync_height: 1000
+  min_sync_height: 1000,
+  config: %{
+    "sync_interval" => 100,
+    "chunk_size" => 250
+  }
 })
 |> Repo.insert()
 

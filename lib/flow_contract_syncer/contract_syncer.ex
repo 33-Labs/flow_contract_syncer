@@ -18,6 +18,8 @@ defmodule FlowContractSyncer.ContractSyncer do
   @updated_event "flow.AccountContractUpdated"
   @removed_event "flow.AccountContractRemoved"
 
+  @client Application.get_env(:flow_contract_syncer, :client) || Client
+
   def start_link(%Network{name: name, id: id} = network) do
     {:ok, pid} = Task.start_link(__MODULE__, :contract_sync, [network])
     Process.register(pid, :"#{name}_#{id}_contract_syncer")
@@ -154,7 +156,7 @@ defmodule FlowContractSyncer.ContractSyncer do
     encoded_address = encode_address(address)
     encoded_name = encode_string(name)
 
-    res = Client.execute_script(
+    res = @client.execute_script(
       network,
       script,
       [encoded_address, encoded_name], 

@@ -6,6 +6,7 @@ defmodule FlowContractSyncer.Repo.Migrations.CreateTables do
       add :name, :string, null: false
       add :endpoint, :string, null: false
       add :min_sync_height, :bigint, null: false
+      add :config, :map, null: false, default: %{}
     end
 
     create unique_index("networks", [:name], name: :networks_name_index)

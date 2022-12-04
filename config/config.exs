@@ -9,10 +9,7 @@ import Config
 
 config :flow_contract_syncer,
   ecto_repos: [FlowContractSyncer.Repo],
-  access_api: [
-    testnet: "https://rest-testnet.onflow.org/v1",
-    mainnet: "https://rest-mainnet.onflow.org/v1"
-  ]
+  client: FlowContractSyncer.Client
 
 # Configures the endpoint
 config :flow_contract_syncer, FlowContractSyncerWeb.Endpoint,

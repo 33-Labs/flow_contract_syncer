@@ -26,22 +26,24 @@ defmodule FlowContractSyncer.ContractEventSyncer do
   end
 
   def event_sync(%Network{} = network) do
-    latest_height = Client.get_latest_block_height(network)
+    {:ok, latest_height} = client_impl().get_latest_block_height(network)
     synced_height = NetworkState.get_synced_height(network)
 
     do_event_sync(network, synced_height, latest_height)
 
+    sync_interval = Network.contract_event_sync_interval(network) || @sync_interval
+
     receive do
       :event_sync -> event_sync(network)
     after
-      @sync_interval -> event_sync(network)
+      sync_interval -> event_sync(network)
     end
   end
 
   # What if end_height > latest_height?
   def do_event_sync(network, synced_height, latest_height)
     when synced_height < latest_height do
-    chunk_size = @chunk_size
+    chunk_size = Network.contract_event_chunk_size(network) || @chunk_size
 
     start_height = synced_height + 1
     end_height = min(start_height + chunk_size, latest_height)
@@ -50,7 +52,7 @@ defmodule FlowContractSyncer.ContractEventSyncer do
       {:save, {:ok, _ret}} <- {:save, save_events(network, events, end_height)} do
       do_event_sync(network, end_height, latest_height)
     else
-      _ ->
+      _otherwise ->
         # If there is an error, we sleep and retry
         Process.sleep(@sleep_interval)
         do_event_sync(network, synced_height, latest_height)
@@ -68,7 +70,7 @@ defmodule FlowContractSyncer.ContractEventSyncer do
     result = 
       [@added_event, @updated_event, @removed_event]
       |> Enum.map(& Task.async(fn ->
-        Client.get_events(network, &1, start_height, end_height)
+        client_impl().get_events(network, &1, start_height, end_height)
       end))
       |> Enum.map(& (Task.yield(&1, timeout) || Task.shutdown(&1, timeout)))
 
@@ -112,4 +114,9 @@ defmodule FlowContractSyncer.ContractEventSyncer do
       NetworkState.update_height(network, end_height)
     end)
   end
+
+  defp client_impl do
+    Application.get_env(:flow_contract_syncer, :client) || Client
+  end
+
 end

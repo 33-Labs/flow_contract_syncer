@@ -50,7 +50,8 @@ defmodule FlowContractSyncer.MixProject do
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
       {:finch, "~> 0.13.0"},
-      {:nimble_csv, "~> 1.2"}
+      {:nimble_csv, "~> 1.2"},
+      {:mox, "~> 1.0.2", only: :test}
     ]
   end
 

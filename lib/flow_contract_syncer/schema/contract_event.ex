@@ -4,6 +4,8 @@ defmodule FlowContractSyncer.Schema.ContractEvent do
   use Ecto.Schema
   import Ecto.{Changeset, Query}
 
+  require Logger
+
   alias FlowContractSyncer.{Repo, Utils}
   alias FlowContractSyncer.Schema.{Contract, Network}
 
@@ -29,7 +31,7 @@ defmodule FlowContractSyncer.Schema.ContractEvent do
     timestamps()
   end
 
-  @required_fields ~w(digest block_height tx_id tx_index type index address code_hash contract_name processed)a
+  @required_fields ~w(network_id digest block_height tx_id tx_index type index address code_hash contract_name processed)a
   def changeset(event, params \\ %{}) do
     params =
       case Map.get(params, :address) do
