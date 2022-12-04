@@ -18,7 +18,7 @@ alias FlowContractSyncer.Schema.{Contract, Network}
 
 %Network{}
 |> Network.changeset(%{
-  name: "mainnet", 
+  name: "mainnet",
   endpoint: "https://rest-mainnet.onflow.org/v1",
   min_sync_height: 1000,
   config: %{
@@ -34,10 +34,10 @@ mainnet = Repo.get_by(Network, name: "mainnet")
 
 NimbleCSV.define(MyParser, separator: ",", escape: "\"")
 
-changesets = 
+changesets =
   "priv/data/contracts.csv"
   |> File.stream!(read_ahead: 100_000)
-  |> MyParser.parse_stream
+  |> MyParser.parse_stream()
   |> Stream.map(fn [location, code] ->
     ["A", raw_address, name] = String.split(location, ".")
 
@@ -52,10 +52,12 @@ changesets =
     })
   end)
 
-Repo.transaction(fn -> 
-  Enum.each(changesets, fn changeset ->
-    changeset
-    |> Repo.insert!()
-  end)
-end, timeout: :infinity)
-
+Repo.transaction(
+  fn ->
+    Enum.each(changesets, fn changeset ->
+      changeset
+      |> Repo.insert!()
+    end)
+  end,
+  timeout: :infinity
+)

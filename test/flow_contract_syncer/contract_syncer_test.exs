@@ -3,9 +3,9 @@ defmodule FlowContractSyncer.ContractSyncerTest do
   import FlowContractSyncer.ContractEventCase
   import Mox
 
-  alias FlowContractSyncer.Schema.{Contract, ContractEvent, Network}
+  alias FlowContractSyncer.Schema.{Contract, ContractEvent}
+
   alias FlowContractSyncer.{
-    ContractEventSyncer,
     ContractSyncer
   }
 
@@ -14,8 +14,7 @@ defmodule FlowContractSyncer.ContractSyncerTest do
   setup :create_events
 
   test "should sync contracts successfully", %{
-    network: network,
-    events: events
+    network: network
   } do
     FlowClientMock
     |> expect(:execute_script, 3, fn _network, _script, _args, _opts ->
@@ -28,12 +27,14 @@ defmodule FlowContractSyncer.ContractSyncerTest do
     [contract] = Contract |> Repo.all()
     assert contract.status == :removed
     assert contract.code == ""
+    assert contract.parsed == false
 
     assert Enum.all?(ContractEvent |> Repo.all(), & &1.processed)
   end
-  
+
   defp create_events(context) do
     network = context[:network]
+
     events = [
       %ContractEvent{
         network_id: network.id,
@@ -76,7 +77,7 @@ defmodule FlowContractSyncer.ContractSyncerTest do
       }
     ]
 
-    persisted_events = events |> Enum.map(& Repo.insert!(&1))
+    persisted_events = events |> Enum.map(&Repo.insert!(&1))
 
     [events: persisted_events]
   end

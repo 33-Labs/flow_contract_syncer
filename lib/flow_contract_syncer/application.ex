@@ -18,7 +18,7 @@ defmodule FlowContractSyncer.Application do
       FlowContractSyncerWeb.Endpoint,
       # Start a worker by calling: FlowContractSyncer.Worker.start_link(arg)
       # {FlowContractSyncer.Worker, arg}
-      {Finch, name: MyFinch},
+      {Finch, name: MyFinch}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

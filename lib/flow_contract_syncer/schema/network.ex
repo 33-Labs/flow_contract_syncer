@@ -34,4 +34,12 @@ defmodule FlowContractSyncer.Schema.Network do
   def contract_sync_interval(%__MODULE__{config: config}) do
     config["contract_sync_interval"]
   end
+
+  def deps_parse_chunk_size(%__MODULE__{config: config}) do
+    config["deps_parse_chunk_size"]
+  end
+
+  def deps_parse_interval(%__MODULE__{config: config}) do
+    config["deps_parse_interval"]
+  end
 end

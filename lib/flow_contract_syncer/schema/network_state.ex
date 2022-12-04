@@ -10,7 +10,7 @@ defmodule FlowContractSyncer.Schema.NetworkState do
   schema "network_states" do
     belongs_to :network, Network
     field :synced_height, :integer
-  
+
     timestamps()
   end
 
@@ -24,8 +24,11 @@ defmodule FlowContractSyncer.Schema.NetworkState do
 
   def get_by_network_id(network_id) do
     case Repo.get_by(__MODULE__, network_id: network_id) do
-      nil -> %__MODULE__{} |> changeset(%{network_id: network_id, synced_height: 0}) |> Repo.insert!()
-      state -> state
+      nil ->
+        %__MODULE__{} |> changeset(%{network_id: network_id, synced_height: 0}) |> Repo.insert!()
+
+      state ->
+        state
     end
   end
 
@@ -41,7 +44,7 @@ defmodule FlowContractSyncer.Schema.NetworkState do
     |> changeset(%{network_id: network_id, synced_height: height})
     |> validate_number(:synced_height, greater_than: synced_height || -1)
     |> Repo.insert_or_update()
-    |> handle_update_height() 
+    |> handle_update_height()
   end
 
   defp handle_update_height({:error, %{errors: [synced_height: _]}}) do
@@ -52,4 +55,3 @@ defmodule FlowContractSyncer.Schema.NetworkState do
     ret
   end
 end
-

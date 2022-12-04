@@ -44,7 +44,10 @@ defmodule FlowContractSyncer.Repo.Migrations.CreateTables do
       timestamps()
     end
 
-    create unique_index("contract_events", [:network_id, :digest], name: :events_network_id_digest_index)
+    create unique_index("contract_events", [:network_id, :digest],
+             name: :events_network_id_digest_index
+           )
+
     create index("contract_events", [:network_id, :address, :contract_name])
     create index("contract_events", [:network_id, :processed])
 
@@ -59,15 +62,18 @@ defmodule FlowContractSyncer.Repo.Migrations.CreateTables do
       add :status, :integer, null: false
       add :code, :text
 
+      add :parsed, :boolean, null: false, default: false
+
       timestamps()
     end
 
     create unique_index("contracts", [:network_id, :uuid], name: :contracts_network_id_uuid_index)
     create index("contracts", [:network_id, :address])
     create index("contracts", [:network_id, :name])
+    create index("contracts", [:network_id, :parsed])
 
     create table("dependencies") do
-      add :contract_id, :bigint, null: false 
+      add :contract_id, :bigint, null: false
       add :dependency_id, :bigint, null: false
 
       timestamps()
@@ -75,17 +81,17 @@ defmodule FlowContractSyncer.Repo.Migrations.CreateTables do
 
     create index("dependencies", [:contract_id])
     create index("dependencies", [:dependency_id])
-  
+
     create unique_index(
-      "dependencies",
-      [:contract_id, :dependency_id],
-      name: :dependencies_contract_id_dependency_id_index
-    )
-  
+             "dependencies",
+             [:contract_id, :dependency_id],
+             name: :dependencies_contract_id_dependency_id_index
+           )
+
     create unique_index(
-      "dependencies",
-      [:dependency_id, :contract_id],
-      name: :dependencies_dependency_id_contract_id_index
-    )
+             "dependencies",
+             [:dependency_id, :contract_id],
+             name: :dependencies_dependency_id_contract_id_index
+           )
   end
 end

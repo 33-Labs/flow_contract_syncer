@@ -21,7 +21,7 @@ defmodule FlowContractSyncer.Client do
   # the range rule is [start, end]
   @impl true
   def get_events(%Network{} = network, type, start_height, end_height)
-    when is_integer(start_height) and is_integer(end_height) do
+      when is_integer(start_height) and is_integer(end_height) do
     endpoint = network.endpoint |> Path.join("events")
 
     query = %{
@@ -29,6 +29,7 @@ defmodule FlowContractSyncer.Client do
       "start_height" => start_height,
       "end_height" => end_height
     }
+
     encoded_query = URI.encode_query(query, :rfc3986)
 
     url = "#{endpoint}?#{encoded_query}"
@@ -52,17 +53,20 @@ defmodule FlowContractSyncer.Client do
     url =
       case opts[:block_height] do
         height when is_integer(height) or is_binary(height) ->
-          query = %{ "block_height" => height }
+          query = %{"block_height" => height}
           encoded_query = URI.encode_query(query, :rfc3986)
           "#{endpoint}?#{encoded_query}"
 
-        _otherwise -> endpoint
+        _otherwise ->
+          endpoint
       end
 
-    body = %{
-      "script" => encoded_script,
-      "arguments" => encoded_arguments
-    } |> Jason.encode!()
+    body =
+      %{
+        "script" => encoded_script,
+        "arguments" => encoded_arguments
+      }
+      |> Jason.encode!()
 
     Finch.build(:post, url, [{"Content-Type", "application/json"}], body)
     |> Finch.request(MyFinch)
@@ -72,20 +76,22 @@ defmodule FlowContractSyncer.Client do
   defp get_latest_block_header(%Network{} = network) do
     endpoint = network.endpoint |> Path.join("blocks")
 
-    query = %{ "height" => "sealed" }
+    query = %{"height" => "sealed"}
     encoded_query = URI.encode_query(query, :rfc3986)
 
     url = "#{endpoint}?#{encoded_query}"
 
     Finch.build(:get, url, [{"Content-Type", "application/json"}])
     |> Finch.request(MyFinch)
-    |> handle_response() 
+    |> handle_response()
   end
 
   defp handle_response({:ok, %{status: 200, body: body}}) do
     case Jason.decode(body) do
-      {:ok, content} -> {:ok, content}
-      error -> 
+      {:ok, content} ->
+        {:ok, content}
+
+      error ->
         Logger.error("#{inspect(error)}")
         {:resp_error, :decode_error}
     end
@@ -95,6 +101,7 @@ defmodule FlowContractSyncer.Client do
     case Jason.decode(body) do
       {:ok, %{"code" => code, "message" => message}} ->
         {:error, :"#{status}_#{code}_#{message}"}
+
       error ->
         Logger.error("#{inspect(error)}")
         {:resp_error, :decode_error}

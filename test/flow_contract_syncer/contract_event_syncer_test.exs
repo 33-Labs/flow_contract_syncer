@@ -15,10 +15,10 @@ defmodule FlowContractSyncer.ContractEventSyncerTest do
   @removed_event "flow.AccountContractRemoved"
 
   test "should sync contract events successfully", %{
-    network: network, 
+    network: network,
     added_events: added_events,
     updated_events: updated_events,
-    removed_events: removed_events,
+    removed_events: removed_events
   } do
     FlowClientMock
     |> expect(:get_latest_block_height, 3, fn _network ->
@@ -31,9 +31,14 @@ defmodule FlowContractSyncer.ContractEventSyncerTest do
       end
 
       case type do
-        @added_event -> {:ok, added_events |> Enum.filter(& filter.(&1, start_height, end_height))}
-        @updated_event -> {:ok, updated_events |> Enum.filter(& filter.(&1, start_height, end_height))}
-        @removed_event -> {:ok, removed_events |> Enum.filter(& filter.(&1, start_height, end_height))}
+        @added_event ->
+          {:ok, added_events |> Enum.filter(&filter.(&1, start_height, end_height))}
+
+        @updated_event ->
+          {:ok, updated_events |> Enum.filter(&filter.(&1, start_height, end_height))}
+
+        @removed_event ->
+          {:ok, removed_events |> Enum.filter(&filter.(&1, start_height, end_height))}
       end
     end)
 

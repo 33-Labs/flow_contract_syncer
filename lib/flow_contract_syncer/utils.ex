@@ -8,13 +8,13 @@ defmodule FlowContractSyncer.Utils do
     if String.length(address) != 18 do
       String.replace(address, "0x", "0x0")
     else
-      address 
+      address
     end
   end
 
   def normalize_uuid(uuid) do
     ["A", raw_address, contract_name] = String.split(uuid, ".")
-    
+
     address =
       if String.length(raw_address) == 15 do
         "0#{raw_address}"
@@ -37,5 +37,4 @@ defmodule FlowContractSyncer.Utils do
       |> Repo.update!()
     end)
   end
-
 end

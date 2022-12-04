@@ -7,16 +7,11 @@ defmodule FlowContractSyncer.ContractSyncer do
   require Logger
 
   alias FlowContractSyncer.{Client, Repo, Utils}
-  alias FlowContractSyncer.Schema.{Contract, ContractEvent, Dependency, Network, NetworkState}
+  alias FlowContractSyncer.Schema.{Contract, ContractEvent, Network}
 
   # 3s
   @interval 3000
   @chunk_size 20
-  @timeout 5000
-
-  @added_event "flow.AccountContractAdded"
-  @updated_event "flow.AccountContractUpdated"
-  @removed_event "flow.AccountContractRemoved"
 
   def start_link(%Network{name: name, id: id} = network) do
     {:ok, pid} = Task.start_link(__MODULE__, :contract_sync, [network])
@@ -27,12 +22,17 @@ defmodule FlowContractSyncer.ContractSyncer do
   def contract_sync(%Network{} = network) do
     chunk_size = Network.contract_sync_chunk_size(network) || @chunk_size
 
-    ContractEvent.unprocessed(chunk_size)
+    ContractEvent.unprocessed(network, chunk_size)
     |> Enum.each(fn event ->
       case sync_contract_from_event(network, event) do
-        {:ok, _} -> ContractEvent.to_processed!(event)
+        {:ok, _} ->
+          ContractEvent.to_processed!(event)
+
         error ->
-          Logger.error("[#{__MODULE__}] failed to sync contract for event: #{event.id}. error: #{inspect(error)}")
+          Logger.error(
+            "[#{__MODULE__}] failed to sync contract for event: #{event.id}. error: #{inspect(error)}"
+          )
+
           {:error, :sync_failed}
       end
     end)
@@ -47,26 +47,37 @@ defmodule FlowContractSyncer.ContractSyncer do
   end
 
   def sync_contract_from_event(%Network{} = network, %ContractEvent{
-    address: address,
-    contract_name: name,
-    type: type
-  }) when type in [:added, :updated, :removed] do
+        address: address,
+        contract_name: name,
+        type: type
+      })
+      when type in [:added, :updated, :removed] do
+    status = get_status(type)
+    sync_contract(network, address, name, status)
+  end
+
+  def sync_contract(%Network{} = network, address, name, status) do
     case get_contract_code(network, address, name) do
       {:ok, raw_code} ->
         uuid = Contract.create_uuid(address, name)
-
         # if the code is nil(maybe the contract is deleted?), we don't delete the old code data
         base =
           if is_nil(raw_code) do
             %Contract{network_id: network.id, uuid: uuid, address: address, name: name}
           else
-            %Contract{network_id: network.id, uuid: uuid, code: raw_code, address: address, name: name}
+            %Contract{
+              network_id: network.id,
+              uuid: uuid,
+              code: raw_code,
+              address: address,
+              name: name
+            }
           end
 
-        insert_or_update_contract(base, get_status(type))
+        insert_or_update_contract(base, status)
 
       error ->
-        error 
+        error
     end
   end
 
@@ -74,9 +85,10 @@ defmodule FlowContractSyncer.ContractSyncer do
   defp get_status(:removed), do: :removed
 
   def insert_or_update_contract(
-    %Contract{network_id: network_id, uuid: uuid, code: code} = contract,
-    status
-  ) when status in [:normal, :removed] do
+        %Contract{network_id: network_id, uuid: uuid, code: code} = contract,
+        status
+      )
+      when status in [:normal, :removed] do
     Contract
     |> where(network_id: ^network_id, uuid: ^uuid)
     |> Repo.one()
@@ -91,92 +103,18 @@ defmodule FlowContractSyncer.ContractSyncer do
     |> Repo.insert_or_update()
   end
 
-
-
-
-
-  def sync_and_create_contract(%Network{id: network_id} = network, address, name) do
-    case get_contract_code(network, address, name) do
-      {:ok, code} ->
-        uuid = "A.#{String.replace(address, "0x", "")}.#{name}"
-        %Contract{}
-        |> Contract.changeset(%{
-          network_id: network_id,
-          uuid: uuid,
-          address: address,
-          name: name,
-          status: :normal,
-          code: code
-        })
-        |> Repo.insert()
-      error ->
-        Logger.error(error)
-        error
-    end
-  end
-
-  def generate_all_dependencies do
-    Contract
-    |> Repo.all()
-    |> Enum.each(fn contract ->
-      generate_dependencies(contract)
-    end)
-  end
-
-  def generate_dependencies(%Contract{id: contract_id} = contract) do
-    contract = contract |> Repo.preload(:network)
-
-    contract
-    |> Contract.extract_imports()
-    |> Enum.map(fn %{
-      "address" => "0x" <> raw_address = address, 
-      "contract" => contract_name
-    } ->
-      uuid = "A.#{raw_address}.#{contract_name}"
-      case Repo.get_by(Contract, uuid: uuid) do
-        %Contract{id: dependency_id} ->
-          # It might be existed, we just insert it and ignore the errors.
-          %Dependency{}
-          |> Dependency.changeset(%{
-            contract_id: contract_id,
-            dependency_id: dependency_id
-          })
-          |> Repo.insert()
-
-        nil ->
-          # If the dependency is not in the database, we need to fetch it from blockchain
-          # In general, the contracts are synced in time order and this case will not happen, 
-          # but we still need to handle this.
-          # What if the contract has been removed? 
-          # -> Then the contract code should be empty?
-          IO.inspect "address: #{address} contract_name: #{contract_name}"
-          case sync_and_create_contract(contract.network, address, contract_name) do
-            {:ok, %Contract{id: dependency_id}} ->
-              %Dependency{}
-              |> Dependency.changeset(%{
-                contract_id: contract_id,
-                dependency_id: dependency_id
-              })
-              |> Repo.insert()
-
-            _otherwise ->
-              nil
-          end
-        end
-    end)
-  end
-
   def get_contract_code(%Network{} = network, address, name, opts \\ []) do
     script = get_contract_script()
     encoded_address = encode_address(address)
     encoded_name = encode_string(name)
 
-    res = client_impl().execute_script(
-      network,
-      script,
-      [encoded_address, encoded_name], 
-      opts
-    )
+    res =
+      client_impl().execute_script(
+        network,
+        script,
+        [encoded_address, encoded_name],
+        opts
+      )
 
     case res do
       {:ok, encoded_code} -> {:ok, decode_code(encoded_code)}
@@ -192,19 +130,20 @@ defmodule FlowContractSyncer.ContractSyncer do
   end
 
   defp do_decode_code(%{
-    "type" => "Optional",
-    "value" => nil
-  }) do
+         "type" => "Optional",
+         "value" => nil
+       }) do
     nil
   end
 
   defp do_decode_code(%{
-    "type" => "Optional",
-    "value" => %{
-      "type" => "Array",
-      "value" => encoded_bytes
-    }
-  }) when is_list(encoded_bytes) do
+         "type" => "Optional",
+         "value" => %{
+           "type" => "Array",
+           "value" => encoded_bytes
+         }
+       })
+       when is_list(encoded_bytes) do
     encoded_bytes
     |> Enum.map(fn
       %{"type" => "UInt8", "value" => value} -> String.to_integer(value)

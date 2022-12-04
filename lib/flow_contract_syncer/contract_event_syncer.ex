@@ -42,14 +42,14 @@ defmodule FlowContractSyncer.ContractEventSyncer do
 
   # What if end_height > latest_height?
   def do_event_sync(network, synced_height, latest_height)
-    when synced_height < latest_height do
+      when synced_height < latest_height do
     chunk_size = Network.contract_event_sync_chunk_size(network) || @chunk_size
 
     start_height = synced_height + 1
     end_height = min(start_height + chunk_size, latest_height)
 
     with {:fetch, {:ok, events}} <- {:fetch, fetch_all_events(network, start_height, end_height)},
-      {:save, {:ok, _ret}} <- {:save, save_events(network, events, end_height)} do
+         {:save, {:ok, _ret}} <- {:save, save_events(network, events, end_height)} do
       do_event_sync(network, end_height, latest_height)
     else
       _otherwise ->
@@ -59,35 +59,39 @@ defmodule FlowContractSyncer.ContractEventSyncer do
     end
   end
 
-  def do_event_sync(_network, synced_height, latest_height) 
-    when synced_height >= latest_height do
-    :ok     
+  def do_event_sync(_network, synced_height, latest_height)
+      when synced_height >= latest_height do
+    :ok
   end
 
   defp fetch_all_events(network, start_height, end_height) do
     timeout = @timeout
 
-    result = 
+    result =
       [@added_event, @updated_event, @removed_event]
-      |> Enum.map(& Task.async(fn ->
-        client_impl().get_events(network, &1, start_height, end_height)
-      end))
-      |> Enum.map(& (Task.yield(&1, timeout) || Task.shutdown(&1, timeout)))
+      |> Enum.map(
+        &Task.async(fn ->
+          client_impl().get_events(network, &1, start_height, end_height)
+        end)
+      )
+      |> Enum.map(&(Task.yield(&1, timeout) || Task.shutdown(&1, timeout)))
 
-    all_fetched = Enum.all?(result, fn
-      {:ok, {:ok, _}} -> true
-      _otherwise -> false
-    end)
+    all_fetched =
+      Enum.all?(result, fn
+        {:ok, {:ok, _}} -> true
+        _otherwise -> false
+      end)
 
     case all_fetched do
-      true -> 
+      true ->
         events =
           result
           |> Enum.flat_map(fn {:ok, {:ok, blocks_with_events}} -> blocks_with_events end)
           |> extract_events()
 
         {:ok, events}
-      false -> 
+
+      false ->
         {:error, :not_full_filled}
     end
   end
@@ -95,18 +99,18 @@ defmodule FlowContractSyncer.ContractEventSyncer do
   defp extract_events(blocks_with_events) do
     blocks_with_events
     |> Enum.flat_map(fn %{
-      "block_height" => raw_height, 
-      "events" => events
-    } ->
-      Enum.map(events, & Map.put(&1, "block_height", String.to_integer(raw_height)))
+                          "block_height" => raw_height,
+                          "events" => events
+                        } ->
+      Enum.map(events, &Map.put(&1, "block_height", String.to_integer(raw_height)))
     end)
   end
 
   defp save_events(%Network{} = network, events, end_height) do
     Repo.transaction(fn ->
       events
-      |> Enum.map(& ContractEvent.new(&1, network))
-      |> Enum.filter(& is_tuple(&1) and elem(&1, 0) == :ok)
+      |> Enum.map(&ContractEvent.new(&1, network))
+      |> Enum.filter(&(is_tuple(&1) and elem(&1, 0) == :ok))
       |> Enum.each(fn {:ok, changeset} ->
         Repo.insert!(changeset)
       end)
@@ -118,5 +122,4 @@ defmodule FlowContractSyncer.ContractEventSyncer do
   defp client_impl do
     Application.get_env(:flow_contract_syncer, :client) || Client
   end
-
 end
