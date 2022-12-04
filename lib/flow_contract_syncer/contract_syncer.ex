@@ -14,6 +14,7 @@ defmodule FlowContractSyncer.ContractSyncer do
   @chunk_size 20
 
   def start_link(%Network{name: name, id: id} = network) do
+    Logger.info("[#{__MODULE__}_#{name}] stared")
     {:ok, pid} = Task.start_link(__MODULE__, :contract_sync, [network])
     Process.register(pid, :"#{name}_#{id}_contract_syncer")
     {:ok, pid}
@@ -71,11 +72,10 @@ defmodule FlowContractSyncer.ContractSyncer do
               code: raw_code,
               address: address,
               name: name
-            }
+            } 
           end
 
         insert_or_update_contract(base, status)
-
       error ->
         error
     end
@@ -98,6 +98,7 @@ defmodule FlowContractSyncer.ContractSyncer do
     end
     |> Contract.changeset(%{
       code: code,
+      parsed: false,
       status: status
     })
     |> Repo.insert_or_update()

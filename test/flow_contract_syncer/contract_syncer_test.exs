@@ -18,7 +18,7 @@ defmodule FlowContractSyncer.ContractSyncerTest do
   } do
     FlowClientMock
     |> expect(:execute_script, 3, fn _network, _script, _args, _opts ->
-      {:ok, "eyJ0eXBlIjoiT3B0aW9uYWwiLCJ2YWx1ZSI6eyJ0eXBlIjoiQXJyYXkiLCJ2YWx1ZSI6W119fQ=="}
+      {:ok, "eyJ0eXBlIjoiT3B0aW9uYWwiLCJ2YWx1ZSI6eyJ0eXBlIjoiQXJyYXkiLCJ2YWx1ZSI6W3sidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIzIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjMifV19fQ=="}
     end)
 
     ContractSyncer.start_link(network)
@@ -26,7 +26,7 @@ defmodule FlowContractSyncer.ContractSyncerTest do
 
     [contract] = Contract |> Repo.all()
     assert contract.status == :removed
-    assert contract.code == ""
+    assert contract.code == "\x03\x03"
     assert contract.parsed == false
 
     assert Enum.all?(ContractEvent |> Repo.all(), & &1.processed)

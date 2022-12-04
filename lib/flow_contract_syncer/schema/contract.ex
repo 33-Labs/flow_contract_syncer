@@ -30,7 +30,8 @@ defmodule FlowContractSyncer.Schema.Contract do
     timestamps()
   end
 
-  @required_fields ~w(network_id uuid address name status)a
+  @required_fields ~w(network_id uuid address name status parsed)a
+  @optional_fields ~w(code)a
   def changeset(struct, params \\ %{}) do
     params =
       case Map.get(params, :address) do
@@ -51,7 +52,7 @@ defmodule FlowContractSyncer.Schema.Contract do
       end
 
     struct
-    |> cast(params, @required_fields)
+    |> cast(params, @required_fields ++ @optional_fields)
     |> validate_required(@required_fields)
     |> validate_length(:address, is: 18)
     |> unique_constraint([:network_id, :uuid], name: :contracts_network_id_uuid_index)

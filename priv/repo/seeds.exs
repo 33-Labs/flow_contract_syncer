@@ -21,9 +21,14 @@ alias FlowContractSyncer.Schema.{Contract, Network}
   name: "mainnet",
   endpoint: "https://rest-mainnet.onflow.org/v1",
   min_sync_height: 1000,
+  is_enabled: true,
   config: %{
-    "sync_interval" => 100,
-    "chunk_size" => 250
+    "contract_event_sync_interval" => 100,
+    "contract_event_sync_chunk_size" => 250,
+    "contract_sync_interval" => 1000,
+    "contract_sync_chunk_size" => 20,
+    "deps_parse_interval" => 1000,
+    "deps_parse_chunk_size" => 250
   }
 })
 |> Repo.insert()
@@ -48,7 +53,8 @@ changesets =
       address: "0x" <> raw_address,
       name: name,
       status: :normal,
-      code: code
+      code: code,
+      parsed: false
     })
   end)
 

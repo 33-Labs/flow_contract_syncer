@@ -3,7 +3,7 @@ defmodule FlowContractSyncer.ContractEventSyncerTest do
   import FlowContractSyncer.ContractEventCase
   import Mox
 
-  alias FlowContractSyncer.Schema.ContractEvent
+  alias FlowContractSyncer.Schema.{ContractEvent, NetworkState}
   alias FlowContractSyncer.ContractEventSyncer
 
   setup :set_mox_global
@@ -67,5 +67,8 @@ defmodule FlowContractSyncer.ContractEventSyncerTest do
     assert event_2.block_height == 25
     assert event_2.tx_index == 2
     assert event_2.index == 1
+
+    synced_height = NetworkState.get_synced_height(network)
+    assert synced_height == 100
   end
 end

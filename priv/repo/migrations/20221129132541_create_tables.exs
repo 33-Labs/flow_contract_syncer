@@ -6,6 +6,7 @@ defmodule FlowContractSyncer.Repo.Migrations.CreateTables do
       add :name, :string, null: false
       add :endpoint, :string, null: false
       add :min_sync_height, :bigint, null: false
+      add :is_enabled, :boolean, null: false, default: false
       add :config, :map, null: false, default: %{}
     end
 
@@ -39,7 +40,6 @@ defmodule FlowContractSyncer.Repo.Migrations.CreateTables do
       add :contract_name, :string, null: false
 
       add :processed, :boolean, null: false, default: false
-      add :contract_id, :bigint
 
       timestamps()
     end

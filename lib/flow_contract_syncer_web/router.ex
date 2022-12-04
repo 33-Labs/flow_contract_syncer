@@ -21,9 +21,12 @@ defmodule FlowContractSyncerWeb.Router do
   end
 
   # Other scopes may use custom stacks.
-  # scope "/api", FlowContractSyncerWeb do
-  #   pipe_through :api
-  # end
+  scope "/api/v1", FlowContractSyncerWeb do
+    pipe_through :api
+
+    get("/search", ContractSearchController, :search)
+    get("/contracts", ContractController, :show)
+  end
 
   # Enables LiveDashboard only for development
   #

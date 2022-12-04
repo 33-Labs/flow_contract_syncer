@@ -8,13 +8,15 @@ defmodule FlowContractSyncer.Schema.Network do
     field :name, :string
     field :endpoint, :string
     field :min_sync_height, :integer
+    field :is_enabled, :boolean
     field :config, :map
   end
 
   @required_fields ~w(name endpoint min_sync_height config)a
+  @optional_fields ~w(is_enabled)a
   def changeset(network, params \\ %{}) do
     network
-    |> cast(params, @required_fields)
+    |> cast(params, @required_fields ++ @optional_fields)
     |> validate_required(@required_fields)
     |> unique_constraint([:name], name: :networks_name_index)
   end

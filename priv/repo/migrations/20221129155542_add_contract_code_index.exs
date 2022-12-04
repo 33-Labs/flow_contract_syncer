@@ -16,6 +16,7 @@ defmodule FlowContractSyncer.Repo.Migrations.AddContractCodeIndex do
   end
 
   def down do
+    # execute("DROP INDEX contracts_code_index")
     execute("DROP INDEX contracts_code_trgm_index")
     execute("DROP INDEX contracts_uuid_trgm_index")
     execute("DROP EXTENSION pg_trgm")

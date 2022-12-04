@@ -15,7 +15,6 @@ defmodule FlowContractSyncer.Schema.ContractEvent do
 
   schema "contract_events" do
     belongs_to :network, Network
-    belongs_to :contract, Contract
 
     field :digest, :string
     field :block_height, :integer

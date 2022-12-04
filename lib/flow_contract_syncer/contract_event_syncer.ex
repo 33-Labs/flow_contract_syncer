@@ -19,6 +19,7 @@ defmodule FlowContractSyncer.ContractEventSyncer do
   @removed_event "flow.AccountContractRemoved"
 
   def start_link(%Network{name: name, id: id} = network) do
+    Logger.info("[#{__MODULE__}_#{name}] stared")
     {:ok, pid} = Task.start_link(__MODULE__, :event_sync, [network])
     Process.register(pid, :"#{name}_#{id}_event_syncer")
 
@@ -27,9 +28,13 @@ defmodule FlowContractSyncer.ContractEventSyncer do
 
   def event_sync(%Network{} = network) do
     {:ok, latest_height} = client_impl().get_latest_block_height(network)
+    Logger.info("latest_height: #{latest_height}")
     synced_height = NetworkState.get_synced_height(network)
+    min_height = network.min_sync_height
+    Logger.info("synced_height: #{synced_height} min_height: #{min_height}")
 
-    do_event_sync(network, synced_height, latest_height)
+    start_height = max(synced_height, min_height)
+    do_event_sync(network, start_height, latest_height)
 
     sync_interval = Network.contract_event_sync_interval(network) || @sync_interval
 
@@ -47,13 +52,15 @@ defmodule FlowContractSyncer.ContractEventSyncer do
 
     start_height = synced_height + 1
     end_height = min(start_height + chunk_size, latest_height)
+    Logger.info("start_height: #{start_height}, end_height: #{end_height}")
 
     with {:fetch, {:ok, events}} <- {:fetch, fetch_all_events(network, start_height, end_height)},
          {:save, {:ok, _ret}} <- {:save, save_events(network, events, end_height)} do
       do_event_sync(network, end_height, latest_height)
     else
-      _otherwise ->
+      otherwise ->
         # If there is an error, we sleep and retry
+        Logger.info("fetch_error: #{inspect(otherwise)}")
         Process.sleep(@sleep_interval)
         do_event_sync(network, synced_height, latest_height)
     end
@@ -79,7 +86,9 @@ defmodule FlowContractSyncer.ContractEventSyncer do
     all_fetched =
       Enum.all?(result, fn
         {:ok, {:ok, _}} -> true
-        _otherwise -> false
+        otherwise -> 
+          Logger.warn("fetch fetch: #{inspect(otherwise)}")
+          false
       end)
 
     case all_fetched do
@@ -107,6 +116,9 @@ defmodule FlowContractSyncer.ContractEventSyncer do
   end
 
   defp save_events(%Network{} = network, events, end_height) do
+    if (events |> Enum.count()) > 0 do
+      Logger.info("New events detected: #{Enum.count(events)}")
+    end
     Repo.transaction(fn ->
       events
       |> Enum.map(&ContractEvent.new(&1, network))
@@ -115,7 +127,7 @@ defmodule FlowContractSyncer.ContractEventSyncer do
         Repo.insert!(changeset)
       end)
 
-      NetworkState.update_height(network, end_height)
+      {:ok, _} = NetworkState.update_height(network, end_height)
     end)
   end
 
