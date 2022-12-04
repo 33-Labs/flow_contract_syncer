@@ -13,7 +13,9 @@ defmodule FlowContractSyncer.ContractEventCase do
           "contract_event_sync_interval" => 5000,
           "contract_event_sync_chunk_size" => 10,
           "contract_sync_interval" => 5000,
-          "contract_sync_chunk_size" => 10
+          "contract_sync_chunk_size" => 10,
+          "deps_parse_interval" => 5000,
+          "deps_parse_chunk_size" => 10
         }
       })
       |> Repo.insert!()
