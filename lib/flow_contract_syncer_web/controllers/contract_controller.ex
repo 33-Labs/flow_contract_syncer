@@ -45,7 +45,7 @@ defmodule FlowContractSyncerWeb.ContractController do
     end
   end
 
-  def show(conn, %{"network" => _network}) do
+  def show(conn, %{"network" => network}) when network != "mainnet" do
     conn
     |> put_status(:unprocessable_entity)
     |> render(:error, code: 100, message: "unsupported")
@@ -104,7 +104,7 @@ defmodule FlowContractSyncerWeb.ContractController do
       |> render(:error, code: 104, message: "invalid params")
   end
 
-  def latest(conn, %{"network" => _network}) do
+  def latest(conn, %{"network" => network}) when network != "mainnet" do
     conn
     |> put_status(:unprocessable_entity)
     |> render(:error, code: 100, message: "unsupported")
@@ -165,7 +165,7 @@ defmodule FlowContractSyncerWeb.ContractController do
     end
   end
 
-  def sync(conn, %{"network" => _network}) do
+  def sync(conn, %{"network" => network}) when network != "mainnet" do
     conn
     |> put_status(:unprocessable_entity)
     |> render(:error, code: 100, message: "unsupported")

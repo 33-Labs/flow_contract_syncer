@@ -11,11 +11,11 @@
         "uuid": "A.0b2a3299cc857e29.TopShot"
       },
       "properties": {
-        "dependants": {
+        "dependants_count": {
           "description": "The amount of contracts which import this contract",
           "type": "integer"
         },
-        "dependencies": {
+        "dependencies_count": {
           "description": "The amount of contracts imported by this contract",
           "type": "integer"
         },
@@ -25,8 +25,8 @@
         }
       },
       "required": [
-        "dependants",
-        "dependencies",
+        "dependants_count",
+        "dependencies_count",
         "uuid"
       ],
       "type": "object"
@@ -365,7 +365,7 @@
             "Bearer": []
           }
         ],
-        "summary": "sync contract manually by uuid",
+        "summary": "Sync contract manually by uuid",
         "tags": [
           "Contracts"
         ]

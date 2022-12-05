@@ -98,7 +98,7 @@ defmodule FlowContractSyncerWeb.ContractSearchController do
     |> render(:error, code: 105, message: "scope should be uuid or code or uuid,code")
   end
 
-  def search(conn, %{"network" => _network}) do
+  def search(conn, %{"network" => network}) when network != "mainnet" do
     conn
     |> put_status(:unprocessable_entity)
     |> render(:error, code: 100, message: "unsupported")
