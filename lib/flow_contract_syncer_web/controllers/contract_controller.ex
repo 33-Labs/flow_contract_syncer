@@ -120,7 +120,7 @@ defmodule FlowContractSyncerWeb.ContractController do
 
   swagger_path :sync do
     get("/api/v1/contracts/sync")
-    summary("sync contract manually by uuid")
+    summary("Sync contract manually by uuid")
     produces("application/json")
     tag("Contracts")
     operation_id("sync_contract")
@@ -227,11 +227,11 @@ defmodule FlowContractSyncerWeb.ContractController do
           properties do
             uuid(:string, "Contract uuid", required: true)
 
-            dependencies(:integer, "The amount of contracts imported by this contract",
+            dependencies_count(:integer, "The amount of contracts imported by this contract",
               required: true
             )
 
-            dependants(:integer, "The amount of contracts which import this contract",
+            dependants_count(:integer, "The amount of contracts which import this contract",
               required: true
             )
           end
