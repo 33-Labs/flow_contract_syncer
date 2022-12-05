@@ -22,7 +22,7 @@ defmodule FlowContractSyncer.ContractSyncerSupervisor do
       {ContractSyncer, network},
       {DependencyParser, network}
     ]
-    
+
     Supervisor.init(children, strategy: :one_for_one)
   end
 end

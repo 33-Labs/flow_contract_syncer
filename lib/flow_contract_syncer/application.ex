@@ -42,7 +42,7 @@ defmodule FlowContractSyncer.Application do
     Supervisor.start_child(
       FlowContractSyncer.Supervisor,
       {FlowContractSyncer.ContractSyncerSupervisor, network}
-    ) 
+    )
   end
 
   # Tell Phoenix to update the endpoint configuration

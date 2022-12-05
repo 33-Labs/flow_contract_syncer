@@ -12,6 +12,7 @@ defmodule FlowContractSyncerWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug FlowContractSyncerWeb.Plugs.ApiAuth
   end
 
   scope "/", FlowContractSyncerWeb do
@@ -22,10 +23,13 @@ defmodule FlowContractSyncerWeb.Router do
 
   # Other scopes may use custom stacks.
   scope "/api/v1", FlowContractSyncerWeb do
-    pipe_through :api
+    pipe_through [:api, :authenticate_api_user]
 
     get("/search", ContractSearchController, :search)
     get("/contracts", ContractController, :show)
+    get("/contracts/latest", ContractController, :latest)
+
+    post("/contracts/sync", ContractController, :sync)
   end
 
   # Enables LiveDashboard only for development

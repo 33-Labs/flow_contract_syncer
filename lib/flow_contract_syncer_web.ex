@@ -74,6 +74,7 @@ defmodule FlowContractSyncerWeb do
       import Plug.Conn
       import Phoenix.Controller
       import Phoenix.LiveView.Router
+      import FlowContractSyncerWeb.Plugs.ApiAuth, only: [authenticate_api_user: 2]
     end
   end
 

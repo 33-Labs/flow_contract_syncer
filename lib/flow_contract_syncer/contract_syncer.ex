@@ -72,10 +72,11 @@ defmodule FlowContractSyncer.ContractSyncer do
               code: raw_code,
               address: address,
               name: name
-            } 
+            }
           end
 
         insert_or_update_contract(base, status)
+
       error ->
         error
     end

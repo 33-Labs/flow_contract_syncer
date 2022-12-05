@@ -85,8 +85,10 @@ defmodule FlowContractSyncer.ContractEventSyncer do
 
     all_fetched =
       Enum.all?(result, fn
-        {:ok, {:ok, _}} -> true
-        otherwise -> 
+        {:ok, {:ok, _}} ->
+          true
+
+        otherwise ->
           Logger.warn("fetch fetch: #{inspect(otherwise)}")
           false
       end)
@@ -116,9 +118,10 @@ defmodule FlowContractSyncer.ContractEventSyncer do
   end
 
   defp save_events(%Network{} = network, events, end_height) do
-    if (events |> Enum.count()) > 0 do
+    if events |> Enum.count() > 0 do
       Logger.info("New events detected: #{Enum.count(events)}")
     end
+
     Repo.transaction(fn ->
       events
       |> Enum.map(&ContractEvent.new(&1, network))

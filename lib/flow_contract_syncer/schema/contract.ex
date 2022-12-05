@@ -62,6 +62,13 @@ defmodule FlowContractSyncer.Schema.Contract do
     "A.#{String.replace(address, "0x", "")}.#{name}"
   end
 
+  def latest(size) when is_integer(size) do
+    __MODULE__
+    |> order_by(desc: :id)
+    |> limit(^size)
+    |> Repo.all()
+  end
+
   def unparsed(%Network{id: network_id}, limit \\ 100) do
     __MODULE__
     |> where(network_id: ^network_id, parsed: false)
