@@ -53,11 +53,11 @@ defmodule FlowContractSyncerWeb.ContractSearchController do
     render(conn, :contract_search, contracts: contracts)
   end
 
-  def search(conn, %{"query" => query, "network" => "mainnet", "scope" => _scope}) do
+  def search(conn, %{"query" => _query, "network" => "mainnet", "scope" => _scope}) do
     render(conn, :error, code: 105, message: "scope should be uuid or code or uuid,code")
   end
 
-  def search(conn, %{"query" => query, "network" => "mainnet"} = params) do
+  def search(conn, %{"query" => _query, "network" => "mainnet"} = params) do
     search(conn, Map.put(params, "scope", "uuid,code"))
   end
 

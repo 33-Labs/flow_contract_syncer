@@ -28,12 +28,14 @@ defmodule FlowContractSyncer.Application do
     opts = [strategy: :one_for_one, name: FlowContractSyncer.Supervisor]
     ret = {:ok, _pid} = Supervisor.start_link(children, opts)
 
-    # Network
-    # |> FlowContractSyncer.Repo.all()
-    # |> Enum.filter(& &1.is_enabled)
-    # |> Enum.map(fn network ->
-    #   {:ok, child} = start_contract_syncer_sup(network)
-    # end)
+    if env() == :prod do
+      Network
+      |> FlowContractSyncer.Repo.all()
+      |> Enum.filter(& &1.is_enabled)
+      |> Enum.map(fn network ->
+        {:ok, _child} = start_contract_syncer_sup(network)
+      end)
+    end
 
     ret
   end
@@ -51,5 +53,17 @@ defmodule FlowContractSyncer.Application do
   def config_change(changed, _new, removed) do
     FlowContractSyncerWeb.Endpoint.config_change(changed, removed)
     :ok
+  end
+
+  defp env do
+    if function_exported?(Mix, :env, 0) do
+      Mix.env()
+    else
+      case System.get_env("MIX_ENV") do
+        "prod" -> :prod
+        "test" -> :test
+        _otherwise -> :dev
+      end
+    end
   end
 end
