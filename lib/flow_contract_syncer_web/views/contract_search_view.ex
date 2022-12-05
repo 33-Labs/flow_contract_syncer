@@ -6,8 +6,8 @@ defmodule FlowContractSyncerWeb.ContractSearchView do
   def render("contract_search.json", %{contracts: contracts}) 
     when is_list(contracts) do
     %{
-      status: "ok",
-      result: contracts
+      code: 0,
+      data: contracts
     }
   end
 

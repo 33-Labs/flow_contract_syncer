@@ -24,7 +24,7 @@ alias FlowContractSyncer.Schema.{Contract, Network}
   is_enabled: true,
   config: %{
     "contract_event_sync_interval" => 100,
-    "contract_event_sync_chunk_size" => 250,
+    "contract_event_sync_chunk_size" => 249,
     "contract_sync_interval" => 1000,
     "contract_sync_chunk_size" => 20,
     "deps_parse_interval" => 1000,

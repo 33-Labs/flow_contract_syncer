@@ -6,15 +6,16 @@ defmodule FlowContractSyncerWeb.ContractSearchController do
   require Logger
 
   alias FlowContractSyncer.Repo
-  alias FlowContractSyncer.Schema.Contract
-  
+  alias FlowContractSyncer.Schema.{Contract, Network}
+
   def search(conn, %{"query" => query, "network" => "mainnet"}) do
+    network = Repo.get_by(Network, name: "mainnet")
     query = String.replace(query, ~r/\W/u, "")
 
     like = "%#{query}%"
-    contracts = 
+    contracts =
       from(c in Contract,
-        where: ilike(c.code, ^like) or ilike(c.uuid, ^like))
+        where: c.network_id == ^network.id and (ilike(c.code, ^like) or ilike(c.uuid, ^like)))
       |> Repo.all()
       |> Repo.preload([:dependants, :dependencies])
       |> Enum.map(fn contract ->
@@ -30,7 +31,7 @@ defmodule FlowContractSyncerWeb.ContractSearchController do
   end
 
   def search(conn, %{"query" => _query, "network" => _network}) do
-    render(conn, :error, code: 400, message: "unsupported")
+    render(conn, :error, code: 100, message: "unsupported")
   end
 
   def search(conn, %{"query" => query}) do
