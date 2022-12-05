@@ -14,6 +14,8 @@ defmodule FlowContractSyncerWeb.StatusController do
     tag("Status")
     operation_id("get_network_status")
 
+    security([%{Bearer: []}])
+
     parameters do
       network(:path, :string, "Flow network, default value is \"mainnet\"",
         required: false,

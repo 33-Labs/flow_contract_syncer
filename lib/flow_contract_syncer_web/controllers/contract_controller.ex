@@ -14,6 +14,8 @@ defmodule FlowContractSyncerWeb.ContractController do
     tag("Contracts")
     operation_id("query_contract")
 
+    security([%{Bearer: []}])
+
     parameters do
       uuid(:path, :string, "Contract uuid", required: true, example: "A.0b2a3299cc857e29.TopShot")
 
@@ -66,6 +68,8 @@ defmodule FlowContractSyncerWeb.ContractController do
     tag("Contracts")
     operation_id("query_latest_contract")
 
+    security([%{Bearer: []}])
+
     parameters do
       size(:path, :integer, "The number of latest contracts, should not be greater than 10",
         required: false
@@ -107,7 +111,6 @@ defmodule FlowContractSyncerWeb.ContractController do
   end
 
   def latest(conn, params) do
-    IO.inspect(params)
     latest(conn, params |> Map.put("size", "10") |> Map.put("network", "mainnet"))
   end
 
@@ -117,6 +120,8 @@ defmodule FlowContractSyncerWeb.ContractController do
     produces("application/json")
     tag("Contracts")
     operation_id("sync_contract")
+
+    security([%{Bearer: []}])
 
     parameters do
       uuid(:body, :string, "Contract uuid", required: true, example: "A.0b2a3299cc857e29.TopShot")

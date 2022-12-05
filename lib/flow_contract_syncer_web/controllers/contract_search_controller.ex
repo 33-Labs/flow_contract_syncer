@@ -16,6 +16,8 @@ defmodule FlowContractSyncerWeb.ContractSearchController do
     tag("Search")
     operation_id("search_contract")
 
+    security([%{Bearer: []}])
+
     parameters do
       query(:path, :string, "Keyword for searching, case-insensitive",
         required: true,

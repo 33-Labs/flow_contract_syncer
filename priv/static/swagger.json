@@ -257,6 +257,11 @@
             }
           }
         },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
         "summary": "Query for contract",
         "tags": [
           "Contracts"
@@ -303,6 +308,11 @@
             }
           }
         },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
         "summary": "Query latest contracts",
         "tags": [
           "Contracts"
@@ -350,6 +360,11 @@
             }
           }
         },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
         "summary": "sync contract manually by uuid",
         "tags": [
           "Contracts"
@@ -404,6 +419,11 @@
             }
           }
         },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
         "summary": "Search contract",
         "tags": [
           "Search"
@@ -443,6 +463,11 @@
             }
           }
         },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
         "summary": "Network status",
         "tags": [
           "Status"
