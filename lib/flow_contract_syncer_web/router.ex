@@ -25,6 +25,8 @@ defmodule FlowContractSyncerWeb.Router do
   scope "/api/v1", FlowContractSyncerWeb do
     pipe_through [:api, :authenticate_api_user]
 
+    get("/status", StatusController, :show)
+
     get("/search", ContractSearchController, :search)
     get("/contracts", ContractController, :show)
     get("/contracts/latest", ContractController, :latest)
