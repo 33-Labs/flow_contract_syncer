@@ -87,17 +87,18 @@ defmodule FlowContractSyncerWeb.ContractSearchController do
     render(conn, :contract_search, contracts: contracts)
   end
 
-  def search(conn, %{"query" => _query, "network" => "mainnet", "scope" => _scope}) do
+  def search(conn, %{"query" => _query, "network" => "mainnet"} = params) do
+    search(conn, Map.put(params, "scope", "uuid,code"))
+  end
+
+  def search(conn, %{"scope" => scope}) 
+    when scope not in ["code", "uuid", "uuid,code", "code,uuid"] do
     conn
     |> put_status(:unprocessable_entity)
     |> render(:error, code: 105, message: "scope should be uuid or code or uuid,code")
   end
 
-  def search(conn, %{"query" => _query, "network" => "mainnet"} = params) do
-    search(conn, Map.put(params, "scope", "uuid,code"))
-  end
-
-  def search(conn, %{"query" => _query, "network" => _network}) do
+  def search(conn, %{"network" => _network}) do
     conn
     |> put_status(:unprocessable_entity)
     |> render(:error, code: 100, message: "unsupported")

@@ -45,7 +45,7 @@ defmodule FlowContractSyncerWeb.ContractController do
     end
   end
 
-  def show(conn, %{"uuid" => _uuid, "network" => _network}) do
+  def show(conn, %{"network" => _network}) do
     conn
     |> put_status(:unprocessable_entity)
     |> render(:error, code: 100, message: "unsupported")
@@ -104,10 +104,14 @@ defmodule FlowContractSyncerWeb.ContractController do
       |> render(:error, code: 104, message: "invalid params")
   end
 
-  def latest(conn, %{"size" => _size, "network" => _network}) do
+  def latest(conn, %{"network" => _network}) do
     conn
     |> put_status(:unprocessable_entity)
     |> render(:error, code: 100, message: "unsupported")
+  end
+
+  def latest(conn, %{"size" => _size} = params) do
+    latest(conn, params |> Map.put("network", "mainnet"))
   end
 
   def latest(conn, params) do
@@ -161,7 +165,7 @@ defmodule FlowContractSyncerWeb.ContractController do
     end
   end
 
-  def sync(conn, %{"uuid" => _uuid, "network" => _network}) do
+  def sync(conn, %{"network" => _network}) do
     conn
     |> put_status(:unprocessable_entity)
     |> render(:error, code: 100, message: "unsupported")
@@ -169,6 +173,12 @@ defmodule FlowContractSyncerWeb.ContractController do
 
   def sync(conn, %{"uuid" => _uuid} = params) do
     sync(conn, Map.put(params, "network", "mainnet"))
+  end
+
+  def sync(conn, _params) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> render(:error, code: 104, message: "invalid params")
   end
 
   def swagger_definitions do
