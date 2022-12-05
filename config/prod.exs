@@ -21,7 +21,7 @@ config :logger, level: :info
 # to the previous section and set your `:url` port to 443:
 #
 config :flow_contract_syncer, FlowContractSyncerWeb.Endpoint,
-  url: [host: "flow-contract-syncer.gigalixirapp.com"]
+  url: [host: "flow-contract-syncer.gigalixirapp.com", port: 443]
 
 #
 # The `cipher_suite` is set to `:strong` to support only the
