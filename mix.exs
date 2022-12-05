@@ -7,7 +7,7 @@ defmodule FlowContractSyncer.MixProject do
       version: "0.1.0",
       elixir: "~> 1.12",
       elixirc_paths: elixirc_paths(Mix.env()),
-      compilers: Mix.compilers(),
+      compilers: Mix.compilers() ++ [:phoenix_swagger],
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps()
@@ -51,6 +51,8 @@ defmodule FlowContractSyncer.MixProject do
       {:plug_cowboy, "~> 2.5"},
       {:finch, "~> 0.13.0"},
       {:nimble_csv, "~> 1.2"},
+      {:phoenix_swagger, "~> 0.8"},
+      {:ex_json_schema, "~> 0.7"},
       {:mox, "~> 1.0.2", only: :test}
     ]
   end

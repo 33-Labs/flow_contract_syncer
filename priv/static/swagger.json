@@ -1,0 +1,483 @@
+{
+  "consumes": [
+    "application/json"
+  ],
+  "definitions": {
+    "BasicContract": {
+      "description": "Basic info of a contract on the network",
+      "example": {
+        "dependants": 10,
+        "dependencies": 10,
+        "uuid": "A.0b2a3299cc857e29.TopShot"
+      },
+      "properties": {
+        "dependants": {
+          "description": "The amount of contracts which import this contract",
+          "type": "integer"
+        },
+        "dependencies": {
+          "description": "The amount of contracts imported by this contract",
+          "type": "integer"
+        },
+        "uuid": {
+          "description": "Contract uuid",
+          "type": "string"
+        }
+      },
+      "required": [
+        "dependants",
+        "dependencies",
+        "uuid"
+      ],
+      "type": "object"
+    },
+    "BasicContracts": {
+      "description": "A collection of BasicContracts",
+      "items": {
+        "$ref": "#/definitions/BasicContract"
+      },
+      "title": "BasicContracts",
+      "type": "array"
+    },
+    "BasicContractsResp": {
+      "description": "BasicContracts resp",
+      "properties": {
+        "code": {
+          "description": "status code",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/BasicContracts"
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "title": "BasicContractsResp",
+      "type": "object"
+    },
+    "Contract": {
+      "description": "A contract on the network",
+      "example": {
+        "address": "0x0b2a3299cc857e29",
+        "code": "...",
+        "dependants": [
+          "A.c1e4f4f4c4257510.TopShotMarketV3"
+        ],
+        "dependencies": [
+          "A.1d7e57aa55817448.MetadataViews"
+        ],
+        "name": "TopShot",
+        "uuid": "A.0b2a3299cc857e29.TopShot"
+      },
+      "properties": {
+        "address": {
+          "description": "Contract address",
+          "type": "string"
+        },
+        "code": {
+          "description": "Contract code",
+          "type": "string"
+        },
+        "dependants": {
+          "description": "The uuids of contracts which import this contract",
+          "type": "array"
+        },
+        "dependencies": {
+          "description": "The uuids of contracts imported by this contract",
+          "type": "array"
+        },
+        "name": {
+          "description": "Contract name",
+          "type": "string"
+        },
+        "uuid": {
+          "description": "Contract uuid",
+          "type": "string"
+        }
+      },
+      "required": [
+        "dependants",
+        "dependencies",
+        "code",
+        "name",
+        "address",
+        "uuid"
+      ],
+      "title": "Contract",
+      "type": "object"
+    },
+    "ContractResp": {
+      "description": "Contract resp",
+      "properties": {
+        "code": {
+          "description": "status code",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/Contract"
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "title": "ContractResp",
+      "type": "object"
+    },
+    "ErrorResp": {
+      "example": {
+        "code": 100,
+        "message": "unsupported"
+      },
+      "properties": {
+        "code": {
+          "description": "Error code",
+          "type": "integer"
+        },
+        "message": {
+          "description": "Error message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "message",
+        "code"
+      ],
+      "type": "object"
+    },
+    "Status": {
+      "description": "Network status",
+      "example": {
+        "contract_amount": 2437,
+        "last_sync_at": "2022-12-05T02:54:46",
+        "network": "mainnet",
+        "synced_height": 42168691
+      },
+      "properties": {
+        "contract_amount": {
+          "description": "Contracts amount synced",
+          "type": "integer"
+        },
+        "last_sync_at": {
+          "description": "Last time of contract syncing",
+          "type": "datetime"
+        },
+        "network": {
+          "description": "Network name",
+          "type": "string"
+        },
+        "synced_height": {
+          "description": "The block height synced",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "synced_height",
+        "network",
+        "last_sync_at",
+        "contract_amount"
+      ],
+      "title": "Status",
+      "type": "object"
+    },
+    "StatusResp": {
+      "description": "Status resp",
+      "properties": {
+        "code": {
+          "description": "status code",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/Status"
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "title": "StatusResp",
+      "type": "object"
+    }
+  },
+  "host": "localhost:4000",
+  "info": {
+    "contact": {
+      "email": "lanford33@outlook.com",
+      "name": "lanford33"
+    },
+    "description": "API Documentation for FlowContractSyncer",
+    "termsOfService": "Open for public",
+    "title": "FlowContractSyncer API",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/contracts": {
+      "get": {
+        "description": "",
+        "operationId": "query_contract",
+        "parameters": [
+          {
+            "description": "Contract uuid",
+            "in": "path",
+            "name": "uuid",
+            "required": true,
+            "type": "string",
+            "x-example": "A.0b2a3299cc857e29.TopShot"
+          },
+          {
+            "description": "Flow network, default value is \"mainnet\"",
+            "enum": [
+              "mainnet"
+            ],
+            "in": "path",
+            "name": "network",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ContractResp"
+            }
+          },
+          "404": {
+            "description": "Contract not found",
+            "schema": {
+              "$ref": "#/definitions/ErrorResp"
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "schema": {
+              "$ref": "#/definitions/ErrorResp"
+            }
+          }
+        },
+        "summary": "Query for contract",
+        "tags": [
+          "Contracts"
+        ]
+      }
+    },
+    "/api/v1/contracts/latest": {
+      "get": {
+        "description": "",
+        "operationId": "query_latest_contract",
+        "parameters": [
+          {
+            "description": "The number of latest contracts, should not be greater than 10",
+            "in": "path",
+            "name": "size",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "description": "Flow network, default value is \"mainnet\"",
+            "enum": [
+              "mainnet"
+            ],
+            "in": "path",
+            "name": "network",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/BasicContractsResp"
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "schema": {
+              "$ref": "#/definitions/ErrorResp"
+            }
+          }
+        },
+        "summary": "Query latest contracts",
+        "tags": [
+          "Contracts"
+        ]
+      }
+    },
+    "/api/v1/contracts/sync": {
+      "post": {
+        "description": "",
+        "operationId": "sync_contract",
+        "parameters": [
+          {
+            "description": "Contract uuid",
+            "in": "body",
+            "name": "uuid",
+            "required": true,
+            "schema": "string",
+            "x-example": "A.0b2a3299cc857e29.TopShot"
+          },
+          {
+            "description": "Flow network, default value is \"mainnet\"",
+            "enum": [
+              "mainnet"
+            ],
+            "in": "body",
+            "name": "network",
+            "required": false,
+            "schema": "string"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ContractResp"
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "schema": {
+              "$ref": "#/definitions/ErrorResp"
+            }
+          }
+        },
+        "summary": "sync contract manually by uuid",
+        "tags": [
+          "Contracts"
+        ]
+      }
+    },
+    "/api/v1/search": {
+      "get": {
+        "description": "",
+        "operationId": "search_contract",
+        "parameters": [
+          {
+            "description": "Keyword for searching, case-insensitive",
+            "in": "path",
+            "name": "query",
+            "required": true,
+            "type": "string",
+            "x-example": "topshot"
+          },
+          {
+            "description": "Flow network, default value is \"mainnet\"",
+            "enum": [
+              "mainnet"
+            ],
+            "in": "path",
+            "name": "network",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "description": "Search scope, should be \"code\" or \"uuid\" or \"uuid,code\". Default is \"uuid,code\". NOTE: Search in code is a bit slower than search in uuid",
+            "in": "path",
+            "name": "scope",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/BasicContractsResp"
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "schema": {
+              "$ref": "#/definitions/ErrorResp"
+            }
+          }
+        },
+        "summary": "Search contract",
+        "tags": [
+          "Search"
+        ]
+      }
+    },
+    "/api/v1/status": {
+      "get": {
+        "description": "",
+        "operationId": "get_network_status",
+        "parameters": [
+          {
+            "description": "Flow network, default value is \"mainnet\"",
+            "enum": [
+              "mainnet"
+            ],
+            "in": "path",
+            "name": "network",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/StatusResp"
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "schema": {
+              "$ref": "#/definitions/ErrorResp"
+            }
+          }
+        },
+        "summary": "Network status",
+        "tags": [
+          "Status"
+        ]
+      }
+    }
+  },
+  "produces": [
+    "application/json"
+  ],
+  "schemes": [
+    "https",
+    "http"
+  ],
+  "securityDefinitions": {
+    "Bearer": {
+      "description": "API Token must be provided via `Authorization: Bearer ` header",
+      "in": "header",
+      "name": "Authorization",
+      "type": "apiKey"
+    }
+  },
+  "swagger": "2.0",
+  "tags": [
+    {
+      "description": "Contract resources",
+      "name": "Contracts"
+    },
+    {
+      "description": "Search resources",
+      "name": "Search"
+    },
+    {
+      "description": "System status",
+      "name": "Status"
+    }
+  ]
+}

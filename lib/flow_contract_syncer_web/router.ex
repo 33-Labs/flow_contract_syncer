@@ -34,6 +34,43 @@ defmodule FlowContractSyncerWeb.Router do
     post("/contracts/sync", ContractController, :sync)
   end
 
+  scope "/api/v1/swagger" do
+    forward "/", PhoenixSwagger.Plug.SwaggerUI,
+      otp_app: :flow_contract_syncer,
+      swagger_file: "swagger.json"
+  end
+
+  def swagger_info do
+    %{
+      schemes: ["https", "http"],
+      info: %{
+        version: "1.0.0",
+        title: "FlowContractSyncer API",
+        description: "API Documentation for FlowContractSyncer",
+        termsOfService: "Open for public",
+        contact: %{
+          name: "lanford33",
+          email: "lanford33@outlook.com"
+        }
+      },
+      securityDefinitions: %{
+        Bearer: %{
+          type: "apiKey",
+          name: "Authorization",
+          description: "API Token must be provided via `Authorization: Bearer ` header",
+          in: "header"
+        }
+      },
+      consumes: ["application/json"],
+      produces: ["application/json"],
+      tags: [
+        %{name: "Contracts", description: "Contract resources"},
+        %{name: "Search", description: "Search resources"},
+        %{name: "Status", description: "System status"}
+      ]
+    }
+  end
+
   # Enables LiveDashboard only for development
   #
   # If you want to use the LiveDashboard in production, you should put

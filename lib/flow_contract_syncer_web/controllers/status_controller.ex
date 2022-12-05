@@ -1,15 +1,34 @@
 defmodule FlowContractSyncerWeb.StatusController do
   use FlowContractSyncerWeb, :controller
+  use PhoenixSwagger
 
   require Logger
 
   alias FlowContractSyncer.Repo
   alias FlowContractSyncer.Schema.{Contract, Network, NetworkState}
 
+  swagger_path :show do
+    get("/api/v1/status")
+    summary("Network status")
+    produces("application/json")
+    tag("Status")
+    operation_id("get_network_status")
+
+    parameters do
+      network(:path, :string, "Flow network, default value is \"mainnet\"",
+        required: false,
+        enum: [:mainnet]
+      )
+    end
+
+    response(200, "OK", Schema.ref(:StatusResp))
+    response(422, "Unprocessable Entity", Schema.ref(:ErrorResp))
+  end
+
   def show(conn, %{"network" => "mainnet"}) do
     network = Repo.get_by(Network, name: "mainnet")
     network_state = NetworkState.get_by_network_id(network.id)
-    contract_amount = Contract.total_amount()
+    contract_amount = Contract.total_amount(network)
 
     status = %{
       network: network.name,
@@ -22,10 +41,46 @@ defmodule FlowContractSyncerWeb.StatusController do
   end
 
   def show(conn, %{"network" => _network}) do
-    render(conn, :error, code: 100, message: "unsupported")
+    conn
+    |> put_status(:unprocessable_entity)
+    |> render(:error, code: 100, message: "unsupported")
   end
 
   def show(conn, params) do
-    show(conn, Map.put(params, "network", "mainnet")) 
+    show(conn, Map.put(params, "network", "mainnet"))
+  end
+
+  def swagger_definitions do
+    %{
+      Status:
+        swagger_schema do
+          title("Status")
+          description("Network status")
+
+          properties do
+            contract_amount(:integer, "Contracts amount synced", required: true)
+            last_sync_at(:datetime, "Last time of contract syncing", required: true)
+            network(:string, "Network name", required: true)
+            synced_height(:integer, "The block height synced", required: true)
+          end
+
+          example(%{
+            contract_amount: 2437,
+            last_sync_at: "2022-12-05T02:54:46",
+            network: "mainnet",
+            synced_height: 42_168_691
+          })
+        end,
+      StatusResp:
+        swagger_schema do
+          title("StatusResp")
+          description("Status resp")
+
+          properties do
+            code(:integer, "status code", required: true)
+            data(Schema.ref(:Status))
+          end
+        end
+    }
   end
 end

@@ -1,10 +1,32 @@
 defmodule FlowContractSyncerWeb.ContractController do
   use FlowContractSyncerWeb, :controller
+  use PhoenixSwagger
 
   require Logger
 
   alias FlowContractSyncer.{ContractSyncer, Repo, Utils}
   alias FlowContractSyncer.Schema.{Contract, Network}
+
+  swagger_path :show do
+    get("/api/v1/contracts")
+    summary("Query for contract")
+    produces("application/json")
+    tag("Contracts")
+    operation_id("query_contract")
+
+    parameters do
+      uuid(:path, :string, "Contract uuid", required: true, example: "A.0b2a3299cc857e29.TopShot")
+
+      network(:path, :string, "Flow network, default value is \"mainnet\"",
+        required: false,
+        enum: [:mainnet]
+      )
+    end
+
+    response(200, "OK", Schema.ref(:ContractResp))
+    response(404, "Contract not found", Schema.ref(:ErrorResp))
+    response(422, "Unprocessable Entity", Schema.ref(:ErrorResp))
+  end
 
   def show(conn, %{"uuid" => uuid, "network" => "mainnet"}) do
     network = Repo.get_by(Network, name: "mainnet")
@@ -13,34 +35,100 @@ defmodule FlowContractSyncerWeb.ContractController do
     contract = Repo.get_by(Contract, network_id: network.id, uuid: uuid)
 
     case contract do
-      nil -> render(conn, :error, code: 102, message: "contract not found")
-      %Contract{} = contract -> render(conn, :show, contract: contract)
+      nil ->
+        render(put_status(conn, :not_found), :error, code: 102, message: "contract not found")
+
+      %Contract{} = contract ->
+        render(conn, :show, contract: contract)
     end
   end
 
   def show(conn, %{"uuid" => _uuid, "network" => _network}) do
-    render(conn, :error, code: 100, message: "unsupported")
+    conn
+    |> put_status(:unprocessable_entity)
+    |> render(:error, code: 100, message: "unsupported")
   end
 
   def show(conn, %{"uuid" => _uuid} = params) do
     show(conn, Map.put(params, "network", "mainnet"))
   end
 
-  def latest(conn, %{"size" => size}) do
-    size = String.to_integer(size)
+  def show(conn, _params) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> render(:error, code: 104, message: "invalid params")
+  end
+
+  swagger_path :latest do
+    get("/api/v1/contracts/latest")
+    summary("Query latest contracts")
+    produces("application/json")
+    tag("Contracts")
+    operation_id("query_latest_contract")
+
+    parameters do
+      size(:path, :integer, "The number of latest contracts, should not be greater than 10",
+        required: false
+      )
+
+      network(:path, :string, "Flow network, default value is \"mainnet\"",
+        required: false,
+        enum: [:mainnet]
+      )
+    end
+
+    response(200, "OK", Schema.ref(:BasicContractsResp))
+    response(422, "Unprocessable Entity", Schema.ref(:ErrorResp))
+  end
+
+  def latest(conn, %{"size" => size, "network" => "mainnet"}) do
+    network = Repo.get_by(Network, name: "mainnet")
+    size = if is_integer(size), do: size, else: String.to_integer(size)
 
     if size <= 10 do
-      contracts = Contract.latest(size)
+      contracts = Contract.latest(network, size)
       render(conn, :latest, contracts: contracts)
     else
-      render(conn, :error, code: 108, message: "size should not be greater than 10")
+      conn
+      |> put_status(:unprocessable_entity)
+      |> render(:error, code: 108, message: "size should not be greater than 10")
     end
   rescue
-    _ -> render(conn, :error, code: 104, message: "invalid params")
+    _ ->
+      conn
+      |> put_status(:unprocessable_entity)
+      |> render(:error, code: 104, message: "invalid params")
+  end
+
+  def latest(conn, %{"size" => _size, "network" => _network}) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> render(:error, code: 100, message: "unsupported")
   end
 
   def latest(conn, params) do
-    latest(conn, Map.put(params, "size", "10"))
+    IO.inspect(params)
+    latest(conn, params |> Map.put("size", "10") |> Map.put("network", "mainnet"))
+  end
+
+  swagger_path :sync do
+    post("/api/v1/contracts/sync")
+    summary("sync contract manually by uuid")
+    produces("application/json")
+    tag("Contracts")
+    operation_id("sync_contract")
+
+    parameters do
+      uuid(:body, :string, "Contract uuid", required: true, example: "A.0b2a3299cc857e29.TopShot")
+
+      network(:body, :string, "Flow network, default value is \"mainnet\"",
+        required: false,
+        enum: [:mainnet]
+      )
+    end
+
+    response(200, "OK", Schema.ref(:ContractResp))
+    response(422, "Unprocessable Entity", Schema.ref(:ErrorResp))
   end
 
   def sync(conn, %{"uuid" => uuid, "network" => "mainnet"}) do
@@ -56,19 +144,118 @@ defmodule FlowContractSyncerWeb.ContractController do
             render(conn, :show, contract: contract)
 
           {:error, error} ->
-            render(conn, :error, code: 106, message: "#{inspect(error)}")
+            conn
+            |> put_status(:unprocessable_entity)
+            |> render(:error, code: 106, message: "#{inspect(error)}")
         end
 
       _otherwise ->
-        render(conn, :error, code: 104, message: "invalid params")
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(:error, code: 104, message: "invalid params")
     end
   end
 
   def sync(conn, %{"uuid" => _uuid, "network" => _network}) do
-    render(conn, :error, code: 100, message: "unsupported")
+    conn
+    |> put_status(:unprocessable_entity)
+    |> render(:error, code: 100, message: "unsupported")
   end
 
   def sync(conn, %{"uuid" => _uuid} = params) do
     sync(conn, Map.put(params, "network", "mainnet"))
+  end
+
+  def swagger_definitions do
+    %{
+      Contract:
+        swagger_schema do
+          title("Contract")
+          description("A contract on the network")
+
+          properties do
+            uuid(:string, "Contract uuid", required: true)
+            address(:string, "Contract address", required: true)
+            name(:string, "Contract name", required: true)
+            code(:string, "Contract code", required: true)
+
+            dependencies(:array, "The uuids of contracts imported by this contract",
+              required: true
+            )
+
+            dependants(:array, "The uuids of contracts which import this contract", required: true)
+          end
+
+          example(%{
+            uuid: "A.0b2a3299cc857e29.TopShot",
+            address: "0x0b2a3299cc857e29",
+            name: "TopShot",
+            code: "...",
+            dependencies: ["A.1d7e57aa55817448.MetadataViews"],
+            dependants: ["A.c1e4f4f4c4257510.TopShotMarketV3"]
+          })
+        end,
+      ContractResp:
+        swagger_schema do
+          title("ContractResp")
+          description("Contract resp")
+
+          properties do
+            code(:integer, "status code", required: true)
+            data(Schema.ref(:Contract))
+          end
+        end,
+      BasicContract:
+        swagger_schema do
+          description("Basic info of a contract on the network")
+
+          properties do
+            uuid(:string, "Contract uuid", required: true)
+
+            dependencies(:integer, "The amount of contracts imported by this contract",
+              required: true
+            )
+
+            dependants(:integer, "The amount of contracts which import this contract",
+              required: true
+            )
+          end
+
+          example(%{
+            uuid: "A.0b2a3299cc857e29.TopShot",
+            dependencies: 10,
+            dependants: 10
+          })
+        end,
+      BasicContracts:
+        swagger_schema do
+          title("BasicContracts")
+          description("A collection of BasicContracts")
+          type(:array)
+          items(Schema.ref(:BasicContract))
+        end,
+      BasicContractsResp:
+        swagger_schema do
+          title("BasicContractsResp")
+          description("BasicContracts resp")
+
+          properties do
+            code(:integer, "status code", required: true)
+            data(Schema.ref(:BasicContracts))
+          end
+        end,
+      ErrorResp:
+        swagger_schema do
+          properties do
+            code(:integer, "Error code", required: true)
+            message(:string, "Error message", required: true)
+          end
+
+          example(%{
+            code: 100,
+            message: "unsupported"
+          })
+        end
+    }
   end
 end

@@ -62,12 +62,13 @@ defmodule FlowContractSyncer.Schema.Contract do
     "A.#{String.replace(address, "0x", "")}.#{name}"
   end
 
-  def total_amount do
-    Repo.one(from c in __MODULE__, select: count("*"))
+  def total_amount(%Network{id: network_id}) do
+    Repo.one(from c in __MODULE__, where: c.network_id == ^network_id, select: count("*"))
   end
 
-  def latest(size) when is_integer(size) do
+  def latest(%Network{id: network_id}, size) when is_integer(size) do
     __MODULE__
+    |> where(network_id: ^network_id)
     |> order_by(desc: :id)
     |> limit(^size)
     |> Repo.all()

@@ -50,6 +50,16 @@ config :logger, level: :info
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+config :phoenix_swagger, json_library: Jason
+
+config :flow_contract_syncer, :phoenix_swagger,
+  swagger_files: %{
+    "priv/static/swagger.json" => [
+      router: FlowContractSyncerWeb.Router,
+      endpoint: FlowContractSyncerWeb.Endpoint
+    ]
+  }
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"
