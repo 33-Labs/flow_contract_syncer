@@ -17,9 +17,9 @@ defmodule FlowContractSyncerWeb.ContractController do
     security([%{Bearer: []}])
 
     parameters do
-      uuid(:path, :string, "Contract uuid", required: true, example: "A.0b2a3299cc857e29.TopShot")
+      uuid(:query, :string, "Contract uuid", required: true, example: "A.0b2a3299cc857e29.TopShot")
 
-      network(:path, :string, "Flow network, default value is \"mainnet\"",
+      network(:query, :string, "Flow network, default value is \"mainnet\"",
         required: false,
         enum: [:mainnet]
       )
@@ -71,11 +71,11 @@ defmodule FlowContractSyncerWeb.ContractController do
     security([%{Bearer: []}])
 
     parameters do
-      size(:path, :integer, "The number of latest contracts, should not be greater than 10",
+      size(:query, :integer, "The number of latest contracts, should not be greater than 10",
         required: false
       )
 
-      network(:path, :string, "Flow network, default value is \"mainnet\"",
+      network(:query, :string, "Flow network, default value is \"mainnet\"",
         required: false,
         enum: [:mainnet]
       )

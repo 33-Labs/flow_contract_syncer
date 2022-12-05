@@ -17,7 +17,7 @@ defmodule FlowContractSyncerWeb.StatusController do
     security([%{Bearer: []}])
 
     parameters do
-      network(:path, :string, "Flow network, default value is \"mainnet\"",
+      network(:query, :string, "Flow network, default value is \"mainnet\"",
         required: false,
         enum: [:mainnet]
       )

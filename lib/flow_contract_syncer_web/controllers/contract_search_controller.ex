@@ -19,18 +19,18 @@ defmodule FlowContractSyncerWeb.ContractSearchController do
     security([%{Bearer: []}])
 
     parameters do
-      query(:path, :string, "Keyword for searching, case-insensitive",
+      query(:query, :string, "Keyword for searching, case-insensitive",
         required: true,
         example: "topshot"
       )
 
-      network(:path, :string, "Flow network, default value is \"mainnet\"",
+      network(:query, :string, "Flow network, default value is \"mainnet\"",
         required: false,
         enum: [:mainnet]
       )
 
       scope(
-        :path,
+        :query,
         :string,
         "Search scope, should be \"code\" or \"uuid\" or \"uuid,code\". Default is \"uuid,code\". NOTE: Search in code is a bit slower than search in uuid",
         required: false

@@ -217,7 +217,7 @@
         "parameters": [
           {
             "description": "Contract uuid",
-            "in": "path",
+            "in": "query",
             "name": "uuid",
             "required": true,
             "type": "string",
@@ -228,7 +228,7 @@
             "enum": [
               "mainnet"
             ],
-            "in": "path",
+            "in": "query",
             "name": "network",
             "required": false,
             "type": "string"
@@ -275,7 +275,7 @@
         "parameters": [
           {
             "description": "The number of latest contracts, should not be greater than 10",
-            "in": "path",
+            "in": "query",
             "name": "size",
             "required": false,
             "type": "integer"
@@ -285,7 +285,7 @@
             "enum": [
               "mainnet"
             ],
-            "in": "path",
+            "in": "query",
             "name": "network",
             "required": false,
             "type": "string"
@@ -378,7 +378,7 @@
         "parameters": [
           {
             "description": "Keyword for searching, case-insensitive",
-            "in": "path",
+            "in": "query",
             "name": "query",
             "required": true,
             "type": "string",
@@ -389,14 +389,14 @@
             "enum": [
               "mainnet"
             ],
-            "in": "path",
+            "in": "query",
             "name": "network",
             "required": false,
             "type": "string"
           },
           {
             "description": "Search scope, should be \"code\" or \"uuid\" or \"uuid,code\". Default is \"uuid,code\". NOTE: Search in code is a bit slower than search in uuid",
-            "in": "path",
+            "in": "query",
             "name": "scope",
             "required": false,
             "type": "string"
@@ -440,7 +440,7 @@
             "enum": [
               "mainnet"
             ],
-            "in": "path",
+            "in": "query",
             "name": "network",
             "required": false,
             "type": "string"
