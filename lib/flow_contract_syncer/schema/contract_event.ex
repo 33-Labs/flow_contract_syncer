@@ -7,7 +7,7 @@ defmodule FlowContractSyncer.Schema.ContractEvent do
   require Logger
 
   alias FlowContractSyncer.{Repo, Utils}
-  alias FlowContractSyncer.Schema.{Contract, Network}
+  alias FlowContractSyncer.Schema.Network
 
   @added_event "flow.AccountContractAdded"
   @updated_event "flow.AccountContractUpdated"
