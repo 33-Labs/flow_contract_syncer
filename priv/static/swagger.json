@@ -6,8 +6,8 @@
     "BasicContract": {
       "description": "Basic info of a contract on the network",
       "example": {
-        "dependants": 10,
-        "dependencies": 10,
+        "dependants_count": 10,
+        "dependencies_count": 10,
         "uuid": "A.0b2a3299cc857e29.TopShot"
       },
       "properties": {
@@ -320,16 +320,16 @@
       }
     },
     "/api/v1/contracts/sync": {
-      "post": {
+      "get": {
         "description": "",
         "operationId": "sync_contract",
         "parameters": [
           {
             "description": "Contract uuid",
-            "in": "body",
+            "in": "query",
             "name": "uuid",
             "required": true,
-            "schema": "string",
+            "type": "string",
             "x-example": "A.0b2a3299cc857e29.TopShot"
           },
           {
@@ -337,10 +337,10 @@
             "enum": [
               "mainnet"
             ],
-            "in": "body",
+            "in": "query",
             "name": "network",
             "required": false,
-            "schema": "string"
+            "type": "string"
           }
         ],
         "produces": [

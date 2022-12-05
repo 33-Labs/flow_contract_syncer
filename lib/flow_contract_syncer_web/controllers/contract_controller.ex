@@ -115,7 +115,7 @@ defmodule FlowContractSyncerWeb.ContractController do
   end
 
   swagger_path :sync do
-    post("/api/v1/contracts/sync")
+    get("/api/v1/contracts/sync")
     summary("sync contract manually by uuid")
     produces("application/json")
     tag("Contracts")
@@ -124,9 +124,9 @@ defmodule FlowContractSyncerWeb.ContractController do
     security([%{Bearer: []}])
 
     parameters do
-      uuid(:body, :string, "Contract uuid", required: true, example: "A.0b2a3299cc857e29.TopShot")
+      uuid(:query, :string, "Contract uuid", required: true, example: "A.0b2a3299cc857e29.TopShot")
 
-      network(:body, :string, "Flow network, default value is \"mainnet\"",
+      network(:query, :string, "Flow network, default value is \"mainnet\"",
         required: false,
         enum: [:mainnet]
       )
@@ -228,8 +228,8 @@ defmodule FlowContractSyncerWeb.ContractController do
 
           example(%{
             uuid: "A.0b2a3299cc857e29.TopShot",
-            dependencies: 10,
-            dependants: 10
+            dependencies_count: 10,
+            dependants_count: 10
           })
         end,
       BasicContracts:
