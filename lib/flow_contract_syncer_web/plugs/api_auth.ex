@@ -38,10 +38,13 @@ defmodule FlowContractSyncerWeb.Plugs.ApiAuth do
 
   @spec verify_token(nil | binary) :: {:error, :expired | :invalid | :missing} | {:ok, any}
   def verify_token(token) do
+    one_year = 30 * 24 * 60 * 60 * 12
+
     Phoenix.Token.verify(
       FlowContractSyncerWeb.Endpoint,
       inspect(__MODULE__),
-      token
+      token,
+      max_age: one_year
     )
   end
 
