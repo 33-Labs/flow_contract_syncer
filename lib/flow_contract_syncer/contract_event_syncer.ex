@@ -27,14 +27,23 @@ defmodule FlowContractSyncer.ContractEventSyncer do
   end
 
   def event_sync(%Network{} = network) do
-    {:ok, latest_height} = client_impl().get_latest_block_height(network)
-    synced_height = NetworkState.get_synced_height(network)
-    min_height = network.min_sync_height
+    get_latest_height_res = client_impl().get_latest_block_height(network)
 
-    start_height = max(synced_height, min_height)
-    do_event_sync(network, start_height, latest_height)
-
-    sync_interval = Network.contract_event_sync_interval(network) || @sync_interval
+    sync_interval = 
+      case get_latest_height_res do
+        {:ok, _} -> Network.contract_event_sync_interval(network) || @sync_interval
+        _otherwise -> @timeout
+      end
+    
+    case get_latest_height_res do
+      {:ok, latest_height} ->
+        synced_height = NetworkState.get_synced_height(network)
+        min_height = network.min_sync_height
+    
+        start_height = max(synced_height, min_height)
+        do_event_sync(network, start_height, latest_height)
+      _otherwise -> nil
+    end
 
     receive do
       :event_sync -> event_sync(network)
