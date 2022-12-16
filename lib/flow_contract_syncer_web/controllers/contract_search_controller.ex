@@ -43,7 +43,7 @@ defmodule FlowContractSyncerWeb.ContractSearchController do
 
   def search(conn, %{"query" => query, "network" => "mainnet", "scope" => "uuid"}) do
     network = Repo.get_by(Network, name: "mainnet")
-    query = String.replace(query, ~r/\W/u, "")
+    query = String.replace(query, ~r/(?!\.)\W/u, "")
 
     like = "%#{query}%"
 
@@ -58,7 +58,7 @@ defmodule FlowContractSyncerWeb.ContractSearchController do
 
   def search(conn, %{"query" => query, "network" => "mainnet", "scope" => "code"}) do
     network = Repo.get_by(Network, name: "mainnet")
-    query = String.replace(query, ~r/\W/u, "")
+    query = String.replace(query, ~r/(?!\.)\W/u, "")
 
     like = "%#{query}%"
 
@@ -74,7 +74,7 @@ defmodule FlowContractSyncerWeb.ContractSearchController do
   def search(conn, %{"query" => query, "network" => "mainnet", "scope" => scope})
       when scope in ["uuid,code", "code,uuid"] do
     network = Repo.get_by(Network, name: "mainnet")
-    query = String.replace(query, ~r/\W/u, "")
+    query = String.replace(query, ~r/(?!\.)\W/u, "")
 
     like = "%#{query}%"
 
