@@ -20,7 +20,7 @@ alias FlowContractSyncer.Schema.{Contract, Network}
 |> Network.changeset(%{
   name: "mainnet",
   endpoint: "https://rest-mainnet.onflow.org/v1",
-  min_sync_height: 1000,
+  min_sync_height: 41780000,
   is_enabled: true,
   config: %{
     "contract_event_sync_interval" => 100,

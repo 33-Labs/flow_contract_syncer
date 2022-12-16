@@ -60,11 +60,14 @@ defmodule FlowContractSyncerWeb.ContractSearchController do
     network = Repo.get_by(Network, name: "mainnet")
     query = String.replace(query, ~r/(?!\.)\W/u, "")
 
-    like = "%#{query}%"
-
+    search_term = "#{query}:*"
+    # SELECT * FROM contracts WHERE to_tsvector('english', uuid || ' ' || coalesce(code, ' ')) @@ to_tsquery('fungible:*');
     contracts =
       from(c in Contract,
-        where: c.network_id == ^network.id and ilike(c.code, ^like)
+        where: c.network_id == ^network.id and fragment(
+          "to_tsvector('english', uuid || ' ' || coalesce(code, ' ')) @@ to_tsquery(?);",
+          ^search_term
+        )
       )
       |> Repo.all()
 
