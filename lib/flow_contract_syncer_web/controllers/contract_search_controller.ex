@@ -45,11 +45,17 @@ defmodule FlowContractSyncerWeb.ContractSearchController do
     network = Repo.get_by(Network, name: "mainnet")
     query = String.replace(query, ~r/(?!\.)\W/u, "")
 
-    like = "%#{query}%"
+    search_term = "#{query}:*"
 
+    # SELECT * FROM contracts WHERE to_tsvector('english', uuid || ' ' || coalesce(code, ' ')) @@ to_tsquery('fungible:*');
     contracts =
       from(c in Contract,
-        where: c.network_id == ^network.id and ilike(c.uuid, ^like)
+        where:
+          c.network_id == ^network.id and
+            fragment(
+              "to_tsvector('english', uuid) @@ to_tsquery(?)",
+              ^search_term
+            )
       )
       |> Repo.all()
 
@@ -61,13 +67,16 @@ defmodule FlowContractSyncerWeb.ContractSearchController do
     query = String.replace(query, ~r/(?!\.)\W/u, "")
 
     search_term = "#{query}:*"
+
     # SELECT * FROM contracts WHERE to_tsvector('english', uuid || ' ' || coalesce(code, ' ')) @@ to_tsquery('fungible:*');
     contracts =
       from(c in Contract,
-        where: c.network_id == ^network.id and fragment(
-          "to_tsvector('english', uuid || ' ' || coalesce(code, ' ')) @@ to_tsquery(?);",
-          ^search_term
-        )
+        where:
+          c.network_id == ^network.id and
+            fragment(
+              "to_tsvector('english', coalesce(code, ' ')) @@ to_tsquery(?)",
+              ^search_term
+            )
       )
       |> Repo.all()
 
@@ -79,11 +88,17 @@ defmodule FlowContractSyncerWeb.ContractSearchController do
     network = Repo.get_by(Network, name: "mainnet")
     query = String.replace(query, ~r/(?!\.)\W/u, "")
 
-    like = "%#{query}%"
+    search_term = "#{query}:*"
 
+    # SELECT * FROM contracts WHERE to_tsvector('english', uuid || ' ' || coalesce(code, ' ')) @@ to_tsquery('fungible:*');
     contracts =
       from(c in Contract,
-        where: c.network_id == ^network.id and (ilike(c.code, ^like) or ilike(c.uuid, ^like))
+        where:
+          c.network_id == ^network.id and
+            fragment(
+              "to_tsvector('english', uuid || ' ' || coalesce(code, ' ')) @@ to_tsquery(?)",
+              ^search_term
+            )
       )
       |> Repo.all()
 
@@ -94,8 +109,8 @@ defmodule FlowContractSyncerWeb.ContractSearchController do
     search(conn, Map.put(params, "scope", "uuid,code"))
   end
 
-  def search(conn, %{"scope" => scope}) 
-    when scope not in ["code", "uuid", "uuid,code", "code,uuid"] do
+  def search(conn, %{"scope" => scope})
+      when scope not in ["code", "uuid", "uuid,code", "code,uuid"] do
     conn
     |> put_status(:unprocessable_entity)
     |> render(:error, code: 105, message: "scope should be uuid or code or uuid,code")
