@@ -9,7 +9,7 @@ defmodule FlowContractSyncerWeb.ContractController do
 
   swagger_path :show do
     get("/api/v1/contracts")
-    summary("Query for contract")
+    summary("Query for specific contract")
     produces("application/json")
     tag("Contracts")
     operation_id("query_contract")
@@ -17,7 +17,7 @@ defmodule FlowContractSyncerWeb.ContractController do
     security([%{Bearer: []}])
 
     parameters do
-      uuid(:query, :string, "Contract uuid", required: true, example: "A.0b2a3299cc857e29.TopShot")
+      uuid(:path, :string, "Contract uuid", required: true, example: "A.0b2a3299cc857e29.TopShot")
 
       network(:query, :string, "Flow network, default value is \"mainnet\"",
         required: false,
@@ -30,37 +30,87 @@ defmodule FlowContractSyncerWeb.ContractController do
     response(422, "Unprocessable Entity", Schema.ref(:ErrorResp))
   end
 
-  def show(conn, %{"uuid" => uuid, "network" => "mainnet"}) do
-    network = Repo.get_by(Network, name: "mainnet")
-    uuid = String.trim(uuid)
+  @show_params_schema  %{
+    uuid: [type: :string, required: true],
+    network: [type: :string, in: ["mainnet"], default: "mainnet"]
+  }
 
-    contract = Repo.get_by(Contract, network_id: network.id, uuid: uuid)
-
-    case contract do
-      nil ->
-        render(put_status(conn, :not_found), :error, code: 102, message: "contract not found")
-
-      %Contract{} = contract ->
-        render(conn, :show, contract: contract)
+  def show(conn, params) do
+    with {:ok, %{
+      network: network,
+      uuid: uuid
+    }} <- Tarams.cast(params, @show_params_schema) do
+      network = Repo.get_by(Network, name: network)
+      uuid = String.trim(uuid)
+      contract = Repo.get_by(Contract, network_id: network.id, uuid: uuid)
+      case contract do
+        nil ->
+          render(put_status(conn, :not_found), :error, code: 102, message: "contract not found")
+        %Contract{} = contract ->
+          render(conn, :show, contract: contract)
+      end
+    else
+      {:error, _errors} -> 
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(:error, code: 104, message: "invalid params")
     end
   end
 
-  def show(conn, %{"network" => network}) when network != "mainnet" do
-    conn
-    |> put_status(:unprocessable_entity)
-    |> render(:error, code: 100, message: "unsupported")
+  swagger_path :index do
+    get("/api/v1/contracts")
+    summary("Query contracts")
+    produces("application/json")
+    tag("Contracts")
+    operation_id("query_contracts")
+
+    security([%{Bearer: []}])
+
+    parameters do
+      sort_by(:query, :string, "The field sort by",
+        required: true,
+        enum: [:inserted_at, :dependencies_count, :dependants_count]
+      )
+
+      order_by(:query, :string, "Ascend or descend",
+        required: false,
+        enum: [:asc, :desc]
+      )
+
+      size(:query, :integer, "The number of contracts, should not be greater than 20",
+        required: false
+      )
+
+      network(:query, :string, "Flow network, default value is \"mainnet\"",
+        required: false,
+        enum: [:mainnet]
+      )
+    end
+
+    response(200, "OK", Schema.ref(:BasicContractsResp))
+    response(422, "Unprocessable Entity", Schema.ref(:ErrorResp))
   end
 
-  def show(conn, %{"uuid" => _uuid} = params) do
-    show(conn, Map.put(params, "network", "mainnet"))
+  @index_params_schema  %{
+    sort_by: [type: :string, in: ["inserted_at", "dependants_count", "dependencies_count"], required: true],
+    order_by: [type: :string, in: ["desc", "asc"], default: "desc"],
+    size: [type: :integer, number: [min: 1, max: 20], default: 10],
+    name: [type: :string, in: ["mainnet"], default: "mainnet"]
+  }
+
+  def index(conn, params) do
+    with {:ok, valid_params} <- Tarams.cast(params, @index_params_schema) do
+      IO.inspect valid_params
+      render(conn, :latest, contracts: [])
+    else
+      {:error, errors} -> 
+        IO.inspect errors
+        # FIXME:
+        render(conn, :latest, contracts: [])
+    end
   end
 
-  def show(conn, _params) do
-    conn
-    |> put_status(:unprocessable_entity)
-    |> render(:error, code: 104, message: "invalid params")
-  end
-
+  # deprecated
   swagger_path :latest do
     get("/api/v1/contracts/latest")
     summary("Query latest contracts")

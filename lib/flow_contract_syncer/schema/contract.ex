@@ -58,6 +58,10 @@ defmodule FlowContractSyncer.Schema.Contract do
     |> unique_constraint([:network_id, :uuid], name: :contracts_network_id_uuid_index)
   end
 
+  def code_without_imports(code)  do
+
+  end
+
   def create_uuid(address, name) do
     "A.#{String.replace(address, "0x", "")}.#{name}"
   end
@@ -72,6 +76,13 @@ defmodule FlowContractSyncer.Schema.Contract do
     |> order_by(desc: :id)
     |> limit(^size)
     |> Repo.all()
+  end
+
+  def popular(%Network{id: network_id}, size) when is_integer(size) do
+    # __MODULE__
+    # |> join(:inner, [c], d in assoc(c, :dependants))
+    # |> where([c, d], c.network_id == ^network_id)
+    # |> 
   end
 
   def unparsed(%Network{id: network_id}, limit \\ 100) do

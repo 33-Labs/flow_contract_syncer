@@ -28,8 +28,11 @@ defmodule FlowContractSyncerWeb.Router do
     get("/status", StatusController, :show)
 
     get("/search", ContractSearchController, :search)
-    get("/contracts", ContractController, :show)
+    get("/contracts", ContractController, :index)
+    get("/contracts/:uuid", ContractController, :show)
     get("/contracts/latest", ContractController, :latest)
+    get("/contracts/popular", ContractController, :popular)
+    get("/contracts/dependent", ContractController, :popular)
     get("/contracts/sync", ContractController, :sync)
   end
 

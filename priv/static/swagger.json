@@ -262,7 +262,7 @@
             "Bearer": []
           }
         ],
-        "summary": "Query for contract",
+        "summary": "Query for specific contract",
         "tags": [
           "Contracts"
         ]

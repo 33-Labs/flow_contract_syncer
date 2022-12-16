@@ -53,6 +53,7 @@ defmodule FlowContractSyncer.MixProject do
       {:nimble_csv, "~> 1.2"},
       {:phoenix_swagger, "~> 0.8"},
       {:ex_json_schema, "~> 0.7"},
+      {:tarams, "~> 1.7"},
       {:mox, "~> 1.0.2", only: :test}
     ]
   end
