@@ -91,10 +91,10 @@ defmodule FlowContractSyncerWeb.ContractController do
           |> render(:error, code: 104, message: "invalid params")
       end
     else
-      {:error, _errors} ->
+      {:error, errors} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(:error, code: 104, message: "invalid params")
+        |> render(:error, code: 104, message: Utils.format_errors(errors))
     end
   end
 
@@ -163,11 +163,9 @@ defmodule FlowContractSyncerWeb.ContractController do
       render(conn, :index, contracts: contracts)
     else
       {:error, errors} ->
-        IO.inspect(errors)
-
         conn
         |> put_status(:unprocessable_entity)
-        |> render(:error, code: 104, message: "invalid params")
+        |> render(:error, code: 104, message: Utils.format_errors(errors))
     end
   end
 

@@ -4,7 +4,7 @@ defmodule FlowContractSyncerWeb.ContractSearchController do
 
   require Logger
 
-  alias FlowContractSyncer.Repo
+  alias FlowContractSyncer.{Repo, Utils}
   alias FlowContractSyncer.Schema.{Contract, Network}
 
   swagger_path :search do
@@ -57,10 +57,10 @@ defmodule FlowContractSyncerWeb.ContractSearchController do
       contracts = Contract.search(network, keyword, scope)
       render(conn, :contract_search, contracts: contracts)
     else
-      {:error, _errors} ->
+      {:error, errors} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> render(:error, code: 104, message: "invalid params")
+        |> render(:error, code: 104, message: Utils.format_errors(errors))
     end
   end
 

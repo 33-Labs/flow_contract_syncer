@@ -4,6 +4,13 @@ defmodule FlowContractSyncer.Utils do
   alias FlowContractSyncer.Repo
   alias FlowContractSyncer.Schema.Contract
 
+  def format_errors(errors) do
+    Enum.reduce(errors, "", fn {key, value}, acc ->
+      error = hd(value)
+      acc <> "#{key}: #{error}\n"
+    end)
+  end
+
   def is_valid_uuid(uuid) do
     normalize_uuid(uuid)
     true
