@@ -4,11 +4,11 @@ defmodule FlowContractSyncerWeb.ContractView do
   use FlowContractSyncerWeb, :view
 
   alias FlowContractSyncer.Repo
-  alias FlowContractSyncer.Schema.Contract 
+  alias FlowContractSyncer.Schema.Contract
 
   def render("show.json", %{contract: contract}) do
     contract = Contract.with_deps_uuids(contract)
-    contract.dependants |> Enum.uniq |> Enum.count |> IO.inspect
+    contract.dependants |> Enum.uniq() |> Enum.count() |> IO.inspect()
 
     %{
       code: 0,

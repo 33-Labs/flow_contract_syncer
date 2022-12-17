@@ -9,10 +9,7 @@ defmodule FlowContractSyncerWeb.PartialContractView do
       when is_list(contracts) do
     %{
       code: 0,
-      data:
-        render_many(contracts, __MODULE__, "partial_contract.json",
-          as: :partial_contract
-        )
+      data: render_many(contracts, __MODULE__, "partial_contract.json", as: :partial_contract)
     }
   end
 

@@ -24,7 +24,12 @@ defmodule FlowContractSyncerWeb.ContractController do
         enum: [:mainnet]
       )
 
-      sync(:query, :bool, "Should sync the latest version from the blockchain before showing the contract", default: false)
+      sync(
+        :query,
+        :bool,
+        "Should sync the latest version from the blockchain before showing the contract",
+        default: false
+      )
     end
 
     response(200, "OK", Schema.ref(:ContractResp))
@@ -32,52 +37,61 @@ defmodule FlowContractSyncerWeb.ContractController do
     response(422, "Unprocessable Entity", Schema.ref(:ErrorResp))
   end
 
-  def show_params_schema, do: %{
-    uuid: [type: :string, required: true, cast_func: fn value, _data ->
-      if Utils.is_valid_uuid(value) do
-        {:ok, value}
-      else
-        {:error, "invalid uuid"}
-      end
-    end],
-    network: [type: :string, in: ["mainnet"], default: "mainnet"],
-    sync: [type: :boolean, default: false]
-  }
+  defp show_params_schema,
+    do: %{
+      uuid: [
+        type: :string,
+        required: true,
+        cast_func: fn value, _data ->
+          if Utils.is_valid_uuid(value) do
+            {:ok, value}
+          else
+            {:error, "invalid uuid"}
+          end
+        end
+      ],
+      network: [type: :string, in: ["mainnet"], default: "mainnet"],
+      sync: [type: :boolean, default: false]
+    }
 
   def show(conn, params) do
-    with {:ok, %{
-      network: network,
-      uuid: uuid,
-      sync: should_sync
-    }} <- Tarams.cast(params, show_params_schema()) do
+    with {:ok,
+          %{
+            network: network,
+            uuid: uuid,
+            sync: should_sync
+          }} <- Tarams.cast(params, show_params_schema()) do
       network = Repo.get_by(Network, name: network)
       uuid = String.trim(uuid)
 
-      contract_res = if should_sync do
-        ["A", raw_address, name] = uuid |> String.split(".")
-        address = Utils.normalize_address("0x" <> raw_address)
-        ContractSyncer.sync_contract(network, address, name, :normal)
-      else
-        case Repo.get_by(Contract, network_id: network.id, uuid: uuid) do
-          %Contract{} = contract -> {:ok, contract}
-          _otherwise -> {:error, :not_found}
+      contract_res =
+        if should_sync do
+          ["A", raw_address, name] = uuid |> String.split(".")
+          address = Utils.normalize_address("0x" <> raw_address)
+          ContractSyncer.sync_contract(network, address, name, :normal)
+        else
+          case Repo.get_by(Contract, network_id: network.id, uuid: uuid) do
+            %Contract{} = contract -> {:ok, contract}
+            _otherwise -> {:error, :not_found}
+          end
         end
-      end
 
       case contract_res do
         {:ok, %Contract{} = contract} ->
           render(conn, :show, contract: contract)
+
         {:error, :not_found} ->
           conn
           |> put_status(:not_found)
           |> render(:error, code: 102, message: "contract not found")
-        {:error, error} ->
+
+        {:error, _error} ->
           conn
           |> put_status(:unprocessable_entity)
-          |> render(:error, code: 104, message: "invalid params") 
+          |> render(:error, code: 104, message: "invalid params")
       end
     else
-      {:error, _errors} -> 
+      {:error, _errors} ->
         conn
         |> put_status(:unprocessable_entity)
         |> render(:error, code: 104, message: "invalid params")
@@ -118,21 +132,27 @@ defmodule FlowContractSyncerWeb.ContractController do
     response(422, "Unprocessable Entity", Schema.ref(:ErrorResp))
   end
 
-  @index_params_schema  %{
-    sort_by: [type: :string, in: ["inserted_at", "dependants_count", "dependencies_count"], required: true],
+  @index_params_schema %{
+    sort_by: [
+      type: :string,
+      in: ["inserted_at", "dependants_count", "dependencies_count"],
+      required: true
+    ],
     order_by: [type: :string, in: ["desc", "asc"], default: "desc"],
     size: [type: :integer, number: [min: 1, max: 20], default: 10],
     network: [type: :string, in: ["mainnet"], default: "mainnet"]
   }
 
   def index(conn, params) do
-    with {:ok, %{
-      network: network,
-      sort_by: sort_by,
-      order_by: order_by,
-      size: size
-    }} <- Tarams.cast(params, @index_params_schema) do
+    with {:ok,
+          %{
+            network: network,
+            sort_by: sort_by,
+            order_by: order_by,
+            size: size
+          }} <- Tarams.cast(params, @index_params_schema) do
       network = Repo.get_by(Network, name: network)
+
       contracts =
         case sort_by do
           "inserted_at" -> Contract.sort_by_inserted_at(network, order_by, size)
@@ -142,8 +162,9 @@ defmodule FlowContractSyncerWeb.ContractController do
 
       render(conn, :index, contracts: contracts)
     else
-      {:error, errors} -> 
-        IO.inspect errors
+      {:error, errors} ->
+        IO.inspect(errors)
+
         conn
         |> put_status(:unprocessable_entity)
         |> render(:error, code: 104, message: "invalid params")

@@ -19,7 +19,7 @@ defmodule FlowContractSyncerWeb.ContractSearchController do
     security([%{Bearer: []}])
 
     parameters do
-      query(:query, :string, "Keyword for searching, case-insensitive",
+      keyword(:query, :string, "Keyword for searching, case-insensitive",
         required: true,
         example: "topshot"
       )
@@ -41,95 +41,29 @@ defmodule FlowContractSyncerWeb.ContractSearchController do
     response(422, "Unprocessable Entity", Schema.ref(:ErrorResp))
   end
 
-  def search(conn, %{"query" => query, "network" => "mainnet", "scope" => "uuid"}) do
-    network = Repo.get_by(Network, name: "mainnet")
-    query = String.replace(query, ~r/(?!\.)\W/u, "")
+  @search_params_schema %{
+    keyword: [type: :string, required: true, length: [min: 3]],
+    network: [type: :string, in: ["mainnet"], default: "mainnet"],
+    scope: [type: :string, in: ["code", "uuid", "uuid,code", "code,uuid"], default: ["uuid,code"]]
+  }
 
-    search_term = "#{query}:*"
-
-    # SELECT * FROM contracts WHERE to_tsvector('english', uuid || ' ' || coalesce(code, ' ')) @@ to_tsquery('fungible:*');
-    contracts =
-      from(c in Contract,
-        where:
-          c.network_id == ^network.id and
-            fragment(
-              "to_tsvector('english', uuid) @@ to_tsquery(?)",
-              ^search_term
-            )
-      )
-      |> Repo.all()
-
-    render(conn, :contract_search, contracts: contracts)
-  end
-
-  def search(conn, %{"query" => query, "network" => "mainnet", "scope" => "code"}) do
-    network = Repo.get_by(Network, name: "mainnet")
-    query = String.replace(query, ~r/(?!\.)\W/u, "")
-
-    search_term = "#{query}:*"
-
-    # SELECT * FROM contracts WHERE to_tsvector('english', uuid || ' ' || coalesce(code, ' ')) @@ to_tsquery('fungible:*');
-    contracts =
-      from(c in Contract,
-        where:
-          c.network_id == ^network.id and
-            fragment(
-              "to_tsvector('english', coalesce(code, ' ')) @@ to_tsquery(?)",
-              ^search_term
-            )
-      )
-      |> Repo.all()
-
-    render(conn, :contract_search, contracts: contracts)
-  end
-
-  def search(conn, %{"query" => query, "network" => "mainnet", "scope" => scope})
-      when scope in ["uuid,code", "code,uuid"] do
-    network = Repo.get_by(Network, name: "mainnet")
-    query = String.replace(query, ~r/(?!\.)\W/u, "")
-
-    search_term = "#{query}:*"
-
-    # SELECT * FROM contracts WHERE to_tsvector('english', uuid || ' ' || coalesce(code, ' ')) @@ to_tsquery('fungible:*');
-    contracts =
-      from(c in Contract,
-        where:
-          c.network_id == ^network.id and
-            fragment(
-              "to_tsvector('english', uuid || ' ' || coalesce(code, ' ')) @@ to_tsquery(?)",
-              ^search_term
-            )
-      )
-      |> Repo.all()
-
-    render(conn, :contract_search, contracts: contracts)
-  end
-
-  def search(conn, %{"query" => _query, "network" => "mainnet"} = params) do
-    search(conn, Map.put(params, "scope", "uuid,code"))
-  end
-
-  def search(conn, %{"scope" => scope})
-      when scope not in ["code", "uuid", "uuid,code", "code,uuid"] do
-    conn
-    |> put_status(:unprocessable_entity)
-    |> render(:error, code: 105, message: "scope should be uuid or code or uuid,code")
-  end
-
-  def search(conn, %{"network" => network}) when network != "mainnet" do
-    conn
-    |> put_status(:unprocessable_entity)
-    |> render(:error, code: 100, message: "unsupported")
-  end
-
-  def search(conn, %{"query" => _query} = params) do
-    search(conn, Map.put(params, "network", "mainnet"))
-  end
-
-  def search(conn, _params) do
-    conn
-    |> put_status(:unprocessable_entity)
-    |> render(:error, code: 104, message: "invalid params")
+  def search(conn, params) do
+    with {:ok,
+          %{
+            keyword: keyword,
+            network: network,
+            scope: scope
+          }} <- Tarams.cast(params, @search_params_schema) do
+      network = Repo.get_by(Network, name: network)
+      keyword = String.replace(keyword, ~r/(?!\.)\W/u, "")
+      contracts = Contract.search(network, keyword, scope)
+      render(conn, :contract_search, contracts: contracts)
+    else
+      {:error, _errors} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(:error, code: 104, message: "invalid params")
+    end
   end
 
   def swagger_definitions do
