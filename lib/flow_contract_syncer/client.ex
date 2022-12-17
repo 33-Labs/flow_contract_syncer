@@ -100,7 +100,8 @@ defmodule FlowContractSyncer.Client do
   defp handle_response({:ok, %{status: status, body: body}}) do
     case Jason.decode(body) do
       {:ok, %{"code" => code, "message" => message}} ->
-        {:error, :"#{status}_#{code}_#{message}"}
+        Logger.error(message)
+        {:error, "#{code}_#{message}"}
 
       error ->
         Logger.error("#{inspect(error)}")

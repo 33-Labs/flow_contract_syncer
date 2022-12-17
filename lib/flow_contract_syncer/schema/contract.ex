@@ -58,8 +58,7 @@ defmodule FlowContractSyncer.Schema.Contract do
     |> unique_constraint([:network_id, :uuid], name: :contracts_network_id_uuid_index)
   end
 
-  def code_without_imports(code)  do
-
+  def code_without_imports(code) do
   end
 
   def create_uuid(address, name) do
@@ -70,19 +69,104 @@ defmodule FlowContractSyncer.Schema.Contract do
     Repo.one(from c in __MODULE__, where: c.network_id == ^network_id, select: count("*"))
   end
 
-  def latest(%Network{id: network_id}, size) when is_integer(size) do
-    __MODULE__
-    |> where(network_id: ^network_id)
-    |> order_by(desc: :id)
-    |> limit(^size)
-    |> Repo.all()
+  def with_deps_uuids(%__MODULE__{} = contract) do
+    dependants_query = 
+      from c in __MODULE__, 
+        join: d in Dependency,
+        on: d.dependency_id == ^contract.id and c.id == d.contract_id,
+        select: c.uuid
+    
+    dependencies_query =
+      from c in __MODULE__,
+        join: d in Dependency, 
+        on: d.contract_id == ^contract.id and c.id == d.dependency_id,
+        select: c.uuid
+
+    Repo.preload(contract, [
+        dependencies: dependencies_query,
+        dependants: dependants_query
+      ]
+    )
   end
 
-  def popular(%Network{id: network_id}, size) when is_integer(size) do
-    # __MODULE__
-    # |> join(:inner, [c], d in assoc(c, :dependants))
-    # |> where([c, d], c.network_id == ^network_id)
-    # |> 
+  def sort_by_inserted_at(%Network{id: network_id}, sort_by, size)
+    when is_integer(size) and sort_by in ["asc", "desc"] do
+    direction = String.to_atom(sort_by)
+    dependants = group_by_dependants()
+    dependencies = group_by_dependencies()
+
+    query =
+      from c in __MODULE__,
+        left_join: d in subquery(dependants),
+        on: d.dependency_id == c.id,
+        left_join: dd in subquery(dependencies),
+        on: dd.contract_id == c.id,
+        where: c.network_id == ^network_id,
+        order_by: [{^direction, c.inserted_at}],
+        limit: ^size,
+        select: %{
+          uuid: c.uuid,
+          dependants_count: coalesce(d.count, 0),
+          dependencies_count: coalesce(dd.count, 0)
+        }
+
+    Repo.all(query)
+  end
+
+  def sort_by_dependants(%Network{id: network_id}, sort_by, size)
+      when is_integer(size) and sort_by in ["asc", "desc"] do
+      direction = 
+        case sort_by do
+          "asc" -> :asc_nulls_first
+          "desc" -> :desc_nulls_last
+        end
+    dependants = group_by_dependants()
+    dependencies = group_by_dependencies()
+
+    query =
+      from c in __MODULE__,
+        left_join: d in subquery(dependants),
+        on: d.dependency_id == c.id,
+        left_join: dd in subquery(dependencies),
+        on: dd.contract_id == c.id,
+        where: c.network_id == ^network_id,
+        order_by: [{^direction, coalesce(d.count, 0)}],
+        limit: ^size,
+        select: %{
+          uuid: c.uuid,
+          dependants_count: coalesce(d.count, 0),
+          dependencies_count: coalesce(dd.count, 0)
+        }
+
+    Repo.all(query)
+  end
+
+  def sort_by_dependencies(%Network{id: network_id}, sort_by, size)
+      when is_integer(size) and sort_by in ["asc", "desc"] do
+    direction = 
+      case sort_by do
+        "asc" -> :asc_nulls_first
+        "desc" -> :desc_nulls_last
+      end
+    dependants = group_by_dependants()
+    dependencies = group_by_dependencies()
+
+    query =
+      from c in __MODULE__,
+        left_join: d in subquery(dependencies),
+        on: d.contract_id == c.id,
+        left_join: dd in subquery(dependants),
+        on: dd.dependency_id == c.id,
+        where: c.network_id == ^network_id,
+        order_by: [{^direction, coalesce(d.count, 0)}],
+        limit: ^size,
+        select: %{
+          uuid: c.uuid,
+          dependants_count: coalesce(dd.count, 0),
+          dependencies_count: coalesce(d.count, 0)
+        }
+
+    Repo.all(query)
   end
 
   def unparsed(%Network{id: network_id}, limit \\ 100) do
@@ -139,5 +223,17 @@ defmodule FlowContractSyncer.Schema.Contract do
         }
       end)
     end)
+  end
+
+  defp group_by_dependants do
+    from d in Dependency,
+      group_by: d.dependency_id,
+      select: %{dependency_id: d.dependency_id, count: count(d.id)}
+  end
+
+  defp group_by_dependencies do
+    from d in Dependency,
+      group_by: d.contract_id,
+      select: %{contract_id: d.contract_id, count: count(d.id)}
   end
 end

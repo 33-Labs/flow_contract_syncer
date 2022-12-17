@@ -4,6 +4,13 @@ defmodule FlowContractSyncer.Utils do
   alias FlowContractSyncer.Repo
   alias FlowContractSyncer.Schema.Contract
 
+  def is_valid_uuid(uuid) do
+    normalize_uuid(uuid)
+    true
+  rescue
+    _ -> false
+  end
+
   def normalize_address(address) do
     if String.length(address) != 18 do
       String.replace(address, "0x", "0x0")

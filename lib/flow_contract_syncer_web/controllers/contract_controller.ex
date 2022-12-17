@@ -23,6 +23,8 @@ defmodule FlowContractSyncerWeb.ContractController do
         required: false,
         enum: [:mainnet]
       )
+
+      sync(:query, :bool, "Should sync the latest version from the blockchain before showing the contract", default: false)
     end
 
     response(200, "OK", Schema.ref(:ContractResp))
@@ -30,24 +32,49 @@ defmodule FlowContractSyncerWeb.ContractController do
     response(422, "Unprocessable Entity", Schema.ref(:ErrorResp))
   end
 
-  @show_params_schema  %{
-    uuid: [type: :string, required: true],
-    network: [type: :string, in: ["mainnet"], default: "mainnet"]
+  def show_params_schema, do: %{
+    uuid: [type: :string, required: true, cast_func: fn value, _data ->
+      if Utils.is_valid_uuid(value) do
+        {:ok, value}
+      else
+        {:error, "invalid uuid"}
+      end
+    end],
+    network: [type: :string, in: ["mainnet"], default: "mainnet"],
+    sync: [type: :boolean, default: false]
   }
 
   def show(conn, params) do
     with {:ok, %{
       network: network,
-      uuid: uuid
-    }} <- Tarams.cast(params, @show_params_schema) do
+      uuid: uuid,
+      sync: should_sync
+    }} <- Tarams.cast(params, show_params_schema()) do
       network = Repo.get_by(Network, name: network)
       uuid = String.trim(uuid)
-      contract = Repo.get_by(Contract, network_id: network.id, uuid: uuid)
-      case contract do
-        nil ->
-          render(put_status(conn, :not_found), :error, code: 102, message: "contract not found")
-        %Contract{} = contract ->
+
+      contract_res = if should_sync do
+        ["A", raw_address, name] = uuid |> String.split(".")
+        address = Utils.normalize_address("0x" <> raw_address)
+        ContractSyncer.sync_contract(network, address, name, :normal)
+      else
+        case Repo.get_by(Contract, network_id: network.id, uuid: uuid) do
+          %Contract{} = contract -> {:ok, contract}
+          _otherwise -> {:error, :not_found}
+        end
+      end
+
+      case contract_res do
+        {:ok, %Contract{} = contract} ->
           render(conn, :show, contract: contract)
+        {:error, :not_found} ->
+          conn
+          |> put_status(:not_found)
+          |> render(:error, code: 102, message: "contract not found")
+        {:error, error} ->
+          conn
+          |> put_status(:unprocessable_entity)
+          |> render(:error, code: 104, message: "invalid params") 
       end
     else
       {:error, _errors} -> 
@@ -87,7 +114,7 @@ defmodule FlowContractSyncerWeb.ContractController do
       )
     end
 
-    response(200, "OK", Schema.ref(:BasicContractsResp))
+    response(200, "OK", Schema.ref(:PartialContractsResp))
     response(422, "Unprocessable Entity", Schema.ref(:ErrorResp))
   end
 
@@ -95,140 +122,32 @@ defmodule FlowContractSyncerWeb.ContractController do
     sort_by: [type: :string, in: ["inserted_at", "dependants_count", "dependencies_count"], required: true],
     order_by: [type: :string, in: ["desc", "asc"], default: "desc"],
     size: [type: :integer, number: [min: 1, max: 20], default: 10],
-    name: [type: :string, in: ["mainnet"], default: "mainnet"]
+    network: [type: :string, in: ["mainnet"], default: "mainnet"]
   }
 
   def index(conn, params) do
-    with {:ok, valid_params} <- Tarams.cast(params, @index_params_schema) do
-      IO.inspect valid_params
-      render(conn, :latest, contracts: [])
+    with {:ok, %{
+      network: network,
+      sort_by: sort_by,
+      order_by: order_by,
+      size: size
+    }} <- Tarams.cast(params, @index_params_schema) do
+      network = Repo.get_by(Network, name: network)
+      contracts =
+        case sort_by do
+          "inserted_at" -> Contract.sort_by_inserted_at(network, order_by, size)
+          "dependants_count" -> Contract.sort_by_dependants(network, order_by, size)
+          "dependencies_count" -> Contract.sort_by_dependencies(network, order_by, size)
+        end
+
+      render(conn, :index, contracts: contracts)
     else
       {:error, errors} -> 
         IO.inspect errors
-        # FIXME:
-        render(conn, :latest, contracts: [])
-    end
-  end
-
-  # deprecated
-  swagger_path :latest do
-    get("/api/v1/contracts/latest")
-    summary("Query latest contracts")
-    produces("application/json")
-    tag("Contracts")
-    operation_id("query_latest_contract")
-
-    security([%{Bearer: []}])
-
-    parameters do
-      size(:query, :integer, "The number of latest contracts, should not be greater than 10",
-        required: false
-      )
-
-      network(:query, :string, "Flow network, default value is \"mainnet\"",
-        required: false,
-        enum: [:mainnet]
-      )
-    end
-
-    response(200, "OK", Schema.ref(:BasicContractsResp))
-    response(422, "Unprocessable Entity", Schema.ref(:ErrorResp))
-  end
-
-  def latest(conn, %{"size" => size, "network" => "mainnet"}) do
-    network = Repo.get_by(Network, name: "mainnet")
-    size = if is_integer(size), do: size, else: String.to_integer(size)
-
-    if size <= 10 do
-      contracts = Contract.latest(network, size)
-      render(conn, :latest, contracts: contracts)
-    else
-      conn
-      |> put_status(:unprocessable_entity)
-      |> render(:error, code: 108, message: "size should not be greater than 10")
-    end
-  rescue
-    _ ->
-      conn
-      |> put_status(:unprocessable_entity)
-      |> render(:error, code: 104, message: "invalid params")
-  end
-
-  def latest(conn, %{"network" => network}) when network != "mainnet" do
-    conn
-    |> put_status(:unprocessable_entity)
-    |> render(:error, code: 100, message: "unsupported")
-  end
-
-  def latest(conn, %{"size" => _size} = params) do
-    latest(conn, params |> Map.put("network", "mainnet"))
-  end
-
-  def latest(conn, params) do
-    latest(conn, params |> Map.put("size", "10") |> Map.put("network", "mainnet"))
-  end
-
-  swagger_path :sync do
-    get("/api/v1/contracts/sync")
-    summary("Sync contract manually by uuid")
-    produces("application/json")
-    tag("Contracts")
-    operation_id("sync_contract")
-
-    security([%{Bearer: []}])
-
-    parameters do
-      uuid(:query, :string, "Contract uuid", required: true, example: "A.0b2a3299cc857e29.TopShot")
-
-      network(:query, :string, "Flow network, default value is \"mainnet\"",
-        required: false,
-        enum: [:mainnet]
-      )
-    end
-
-    response(200, "OK", Schema.ref(:ContractResp))
-    response(422, "Unprocessable Entity", Schema.ref(:ErrorResp))
-  end
-
-  def sync(conn, %{"uuid" => uuid, "network" => "mainnet"}) do
-    network = Repo.get_by(Network, name: "mainnet")
-    uuid = String.trim(uuid)
-
-    case uuid |> String.split(".") do
-      ["A", raw_address, name] ->
-        address = Utils.normalize_address("0x" <> raw_address)
-
-        case ContractSyncer.sync_contract(network, address, name, :normal) do
-          {:ok, contract} ->
-            render(conn, :show, contract: contract)
-
-          {:error, error} ->
-            conn
-            |> put_status(:unprocessable_entity)
-            |> render(:error, code: 106, message: "#{inspect(error)}")
-        end
-
-      _otherwise ->
         conn
         |> put_status(:unprocessable_entity)
         |> render(:error, code: 104, message: "invalid params")
     end
-  end
-
-  def sync(conn, %{"network" => network}) when network != "mainnet" do
-    conn
-    |> put_status(:unprocessable_entity)
-    |> render(:error, code: 100, message: "unsupported")
-  end
-
-  def sync(conn, %{"uuid" => _uuid} = params) do
-    sync(conn, Map.put(params, "network", "mainnet"))
-  end
-
-  def sync(conn, _params) do
-    conn
-    |> put_status(:unprocessable_entity)
-    |> render(:error, code: 104, message: "invalid params")
   end
 
   def swagger_definitions do
@@ -270,7 +189,7 @@ defmodule FlowContractSyncerWeb.ContractController do
             data(Schema.ref(:Contract))
           end
         end,
-      BasicContract:
+      PartialContract:
         swagger_schema do
           description("Basic info of a contract on the network")
 
@@ -292,21 +211,21 @@ defmodule FlowContractSyncerWeb.ContractController do
             dependants_count: 10
           })
         end,
-      BasicContracts:
+      PartialContracts:
         swagger_schema do
-          title("BasicContracts")
-          description("A collection of BasicContracts")
+          title("PartialContracts")
+          description("A collection of PartialContracts")
           type(:array)
-          items(Schema.ref(:BasicContract))
+          items(Schema.ref(:PartialContract))
         end,
-      BasicContractsResp:
+      PartialContractsResp:
         swagger_schema do
-          title("BasicContractsResp")
-          description("BasicContracts resp")
+          title("PartialContractsResp")
+          description("PartialContracts resp")
 
           properties do
             code(:integer, "status code", required: true)
-            data(Schema.ref(:BasicContracts))
+            data(Schema.ref(:PartialContracts))
           end
         end,
       ErrorResp:

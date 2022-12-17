@@ -3,59 +3,6 @@
     "application/json"
   ],
   "definitions": {
-    "BasicContract": {
-      "description": "Basic info of a contract on the network",
-      "example": {
-        "dependants_count": 10,
-        "dependencies_count": 10,
-        "uuid": "A.0b2a3299cc857e29.TopShot"
-      },
-      "properties": {
-        "dependants_count": {
-          "description": "The amount of contracts which import this contract",
-          "type": "integer"
-        },
-        "dependencies_count": {
-          "description": "The amount of contracts imported by this contract",
-          "type": "integer"
-        },
-        "uuid": {
-          "description": "Contract uuid",
-          "type": "string"
-        }
-      },
-      "required": [
-        "dependants_count",
-        "dependencies_count",
-        "uuid"
-      ],
-      "type": "object"
-    },
-    "BasicContracts": {
-      "description": "A collection of BasicContracts",
-      "items": {
-        "$ref": "#/definitions/BasicContract"
-      },
-      "title": "BasicContracts",
-      "type": "array"
-    },
-    "BasicContractsResp": {
-      "description": "BasicContracts resp",
-      "properties": {
-        "code": {
-          "description": "status code",
-          "type": "integer"
-        },
-        "data": {
-          "$ref": "#/definitions/BasicContracts"
-        }
-      },
-      "required": [
-        "code"
-      ],
-      "title": "BasicContractsResp",
-      "type": "object"
-    },
     "Contract": {
       "description": "A contract on the network",
       "example": {
@@ -145,6 +92,59 @@
       ],
       "type": "object"
     },
+    "PartialContract": {
+      "description": "Basic info of a contract on the network",
+      "example": {
+        "dependants_count": 10,
+        "dependencies_count": 10,
+        "uuid": "A.0b2a3299cc857e29.TopShot"
+      },
+      "properties": {
+        "dependants_count": {
+          "description": "The amount of contracts which import this contract",
+          "type": "integer"
+        },
+        "dependencies_count": {
+          "description": "The amount of contracts imported by this contract",
+          "type": "integer"
+        },
+        "uuid": {
+          "description": "Contract uuid",
+          "type": "string"
+        }
+      },
+      "required": [
+        "dependants_count",
+        "dependencies_count",
+        "uuid"
+      ],
+      "type": "object"
+    },
+    "PartialContracts": {
+      "description": "A collection of PartialContracts",
+      "items": {
+        "$ref": "#/definitions/PartialContract"
+      },
+      "title": "PartialContracts",
+      "type": "array"
+    },
+    "PartialContractsResp": {
+      "description": "PartialContracts resp",
+      "properties": {
+        "code": {
+          "description": "status code",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/PartialContracts"
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "title": "PartialContractsResp",
+      "type": "object"
+    },
     "Status": {
       "description": "Network status",
       "example": {
@@ -217,7 +217,7 @@
         "parameters": [
           {
             "description": "Contract uuid",
-            "in": "query",
+            "in": "path",
             "name": "uuid",
             "required": true,
             "type": "string",
@@ -232,6 +232,14 @@
             "name": "network",
             "required": false,
             "type": "string"
+          },
+          {
+            "default": false,
+            "description": "Should sync the latest version from the blockchain before showing the contract",
+            "in": "query",
+            "name": "sync",
+            "required": false,
+            "type": "bool"
           }
         ],
         "produces": [
@@ -263,109 +271,6 @@
           }
         ],
         "summary": "Query for specific contract",
-        "tags": [
-          "Contracts"
-        ]
-      }
-    },
-    "/api/v1/contracts/latest": {
-      "get": {
-        "description": "",
-        "operationId": "query_latest_contract",
-        "parameters": [
-          {
-            "description": "The number of latest contracts, should not be greater than 10",
-            "in": "query",
-            "name": "size",
-            "required": false,
-            "type": "integer"
-          },
-          {
-            "description": "Flow network, default value is \"mainnet\"",
-            "enum": [
-              "mainnet"
-            ],
-            "in": "query",
-            "name": "network",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/BasicContractsResp"
-            }
-          },
-          "422": {
-            "description": "Unprocessable Entity",
-            "schema": {
-              "$ref": "#/definitions/ErrorResp"
-            }
-          }
-        },
-        "security": [
-          {
-            "Bearer": []
-          }
-        ],
-        "summary": "Query latest contracts",
-        "tags": [
-          "Contracts"
-        ]
-      }
-    },
-    "/api/v1/contracts/sync": {
-      "get": {
-        "description": "",
-        "operationId": "sync_contract",
-        "parameters": [
-          {
-            "description": "Contract uuid",
-            "in": "query",
-            "name": "uuid",
-            "required": true,
-            "type": "string",
-            "x-example": "A.0b2a3299cc857e29.TopShot"
-          },
-          {
-            "description": "Flow network, default value is \"mainnet\"",
-            "enum": [
-              "mainnet"
-            ],
-            "in": "query",
-            "name": "network",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/ContractResp"
-            }
-          },
-          "422": {
-            "description": "Unprocessable Entity",
-            "schema": {
-              "$ref": "#/definitions/ErrorResp"
-            }
-          }
-        },
-        "security": [
-          {
-            "Bearer": []
-          }
-        ],
-        "summary": "Sync contract manually by uuid",
         "tags": [
           "Contracts"
         ]
@@ -409,7 +314,7 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/BasicContractsResp"
+              "$ref": "#/definitions/PartialContractsResp"
             }
           },
           "422": {

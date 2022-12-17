@@ -37,7 +37,7 @@ defmodule FlowContractSyncerWeb.ContractSearchController do
       )
     end
 
-    response(200, "OK", Schema.ref(:BasicContractsResp))
+    response(200, "OK", Schema.ref(:PartialContractsResp))
     response(422, "Unprocessable Entity", Schema.ref(:ErrorResp))
   end
 
