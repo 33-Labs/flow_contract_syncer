@@ -3,7 +3,6 @@ defmodule FlowContractSyncerWeb.ContractView do
 
   use FlowContractSyncerWeb, :view
 
-  alias FlowContractSyncer.Repo
   alias FlowContractSyncer.Schema.Contract
 
   def render("show.json", %{contract: contract}) do

@@ -3,8 +3,6 @@ defmodule FlowContractSyncerWeb.ContractSearchView do
 
   use FlowContractSyncerWeb, :view
 
-  alias FlowContractSyncer.Repo
-
   def render("contract_search.json", %{contracts: contracts})
       when is_list(contracts) do
     %{

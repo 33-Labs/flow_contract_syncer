@@ -3,8 +3,6 @@ defmodule FlowContractSyncerWeb.PartialContractView do
 
   use FlowContractSyncerWeb, :view
 
-  alias FlowContractSyncer.Repo
-
   def render("partial_contracts.json", %{partial_contracts: contracts})
       when is_list(contracts) do
     %{

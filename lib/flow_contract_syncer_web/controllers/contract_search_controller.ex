@@ -2,8 +2,6 @@ defmodule FlowContractSyncerWeb.ContractSearchController do
   use FlowContractSyncerWeb, :controller
   use PhoenixSwagger
 
-  import Ecto.Query
-
   require Logger
 
   alias FlowContractSyncer.Repo
