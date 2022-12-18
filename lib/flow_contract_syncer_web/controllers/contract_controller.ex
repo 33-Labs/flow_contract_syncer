@@ -122,17 +122,18 @@ defmodule FlowContractSyncerWeb.ContractController do
     response(422, "Unprocessable Entity", Schema.ref(:ErrorResp))
   end
 
-  def index_params_schema, do: %{
-    sort_by: [
-      type: :string,
-      in: ["inserted_at", "dependants_count", "dependencies_count"],
-      required: true
-    ],
-    owner: [type: :string],
-    order_by: [type: :string, in: ["desc", "asc"], default: "desc"],
-    size: [type: :integer, number: [min: 1, max: 500], default: 200],
-    network: [type: :string, in: ["mainnet"], default: "mainnet"]
-  }
+  def index_params_schema,
+    do: %{
+      sort_by: [
+        type: :string,
+        in: ["inserted_at", "dependants_count", "dependencies_count"],
+        required: true
+      ],
+      owner: [type: :string],
+      order_by: [type: :string, in: ["desc", "asc"], default: "desc"],
+      size: [type: :integer, number: [min: 1, max: 500], default: 200],
+      network: [type: :string, in: ["mainnet"], default: "mainnet"]
+    }
 
   def index(conn, params) do
     with {:ok,

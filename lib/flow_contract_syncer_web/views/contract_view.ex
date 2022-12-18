@@ -6,8 +6,8 @@ defmodule FlowContractSyncerWeb.ContractView do
   alias FlowContractSyncer.Schema.Contract
 
   def render("show.json", %{contract: contract}) do
+    events = Contract.extract_events(contract)
     contract = Contract.with_deps_uuids(contract)
-    contract.dependants |> Enum.uniq() |> Enum.count() |> IO.inspect()
 
     %{
       code: 0,
@@ -16,6 +16,7 @@ defmodule FlowContractSyncerWeb.ContractView do
         address: contract.address,
         name: contract.name,
         code: contract.code,
+        events: events,
         dependencies: contract.dependencies,
         dependants: contract.dependants
       }

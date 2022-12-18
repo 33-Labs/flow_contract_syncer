@@ -58,9 +58,6 @@ defmodule FlowContractSyncer.Schema.Contract do
     |> unique_constraint([:network_id, :uuid], name: :contracts_network_id_uuid_index)
   end
 
-  def code_without_imports(code) do
-  end
-
   def create_uuid(address, name) do
     "A.#{String.replace(address, "0x", "")}.#{name}"
   end
@@ -263,6 +260,25 @@ defmodule FlowContractSyncer.Schema.Contract do
     contract
     |> changeset(%{parsed: true})
     |> Repo.update!()
+  end
+
+  def extract_events(%__MODULE__{uuid: uuid, code: code}) do
+    code
+    |> remove_comments()
+    |> do_extract_events()
+    |> Enum.map(&"#{uuid}.#{&1}")
+  end
+
+  defp do_extract_events(code) do
+    # regex = ~r/^ *pub? event [A-Za-z_][A-Za-z0-9_]*\(.*?\)/sm
+    regex = ~r/^ *pub? event (?P<event_name>[A-Za-z_][A-Za-z0-9_]*)\(/m
+
+    Regex.scan(regex, code)
+    |> Enum.map(fn
+      [_, name] -> name
+      _otherwise -> nil
+    end)
+    |> Enum.reject(&is_nil(&1))
   end
 
   def extract_imports(%__MODULE__{code: code}) do
