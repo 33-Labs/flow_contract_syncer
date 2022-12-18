@@ -163,7 +163,7 @@ defmodule FlowContractSyncer.Schema.Contract do
     Repo.all(query)
   end
 
-  def sort_by_inserted_at(%Network{id: network_id}, sort_by, size)
+  def sort_by_inserted_at(%Network{id: network_id}, owner, sort_by, size)
       when is_integer(size) and sort_by in ["asc", "desc"] do
     direction = String.to_atom(sort_by)
     dependants = group_by_dependants()
@@ -184,10 +184,12 @@ defmodule FlowContractSyncer.Schema.Contract do
           dependencies_count: coalesce(dd.count, 0)
         }
 
-    Repo.all(query)
+    query
+    |> filter_by_owner(owner)
+    |> Repo.all()
   end
 
-  def sort_by_dependants(%Network{id: network_id}, sort_by, size)
+  def sort_by_dependants(%Network{id: network_id}, owner, sort_by, size)
       when is_integer(size) and sort_by in ["asc", "desc"] do
     direction =
       case sort_by do
@@ -213,10 +215,12 @@ defmodule FlowContractSyncer.Schema.Contract do
           dependencies_count: coalesce(dd.count, 0)
         }
 
-    Repo.all(query)
+    query
+    |> filter_by_owner(owner)
+    |> Repo.all()
   end
 
-  def sort_by_dependencies(%Network{id: network_id}, sort_by, size)
+  def sort_by_dependencies(%Network{id: network_id}, owner, sort_by, size)
       when is_integer(size) and sort_by in ["asc", "desc"] do
     direction =
       case sort_by do
@@ -242,7 +246,9 @@ defmodule FlowContractSyncer.Schema.Contract do
           dependencies_count: coalesce(d.count, 0)
         }
 
-    Repo.all(query)
+    query
+    |> filter_by_owner(owner)
+    |> Repo.all()
   end
 
   def unparsed(%Network{id: network_id}, limit \\ 100) do
@@ -311,5 +317,13 @@ defmodule FlowContractSyncer.Schema.Contract do
     from d in Dependency,
       group_by: d.contract_id,
       select: %{contract_id: d.contract_id, count: count(d.id)}
+  end
+
+  defp filter_by_owner(query, nil) do
+    query
+  end
+
+  defp filter_by_owner(query, owner) do
+    from c in query, where: c.address == ^owner
   end
 end

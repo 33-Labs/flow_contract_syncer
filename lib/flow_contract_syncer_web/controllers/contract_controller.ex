@@ -39,17 +39,7 @@ defmodule FlowContractSyncerWeb.ContractController do
 
   defp show_params_schema,
     do: %{
-      uuid: [
-        type: :string,
-        required: true,
-        cast_func: fn value, _data ->
-          if Utils.is_valid_uuid(value) do
-            {:ok, value}
-          else
-            {:error, "invalid uuid"}
-          end
-        end
-      ],
+      uuid: [type: :string, required: true, cast_func: &uuid_cast_func/1],
       network: [type: :string, in: ["mainnet"], default: "mainnet"],
       sync: [type: :boolean, default: false]
     }
@@ -132,14 +122,15 @@ defmodule FlowContractSyncerWeb.ContractController do
     response(422, "Unprocessable Entity", Schema.ref(:ErrorResp))
   end
 
-  @index_params_schema %{
+  def index_params_schema, do: %{
     sort_by: [
       type: :string,
       in: ["inserted_at", "dependants_count", "dependencies_count"],
       required: true
     ],
+    owner: [type: :string],
     order_by: [type: :string, in: ["desc", "asc"], default: "desc"],
-    size: [type: :integer, number: [min: 1, max: 20], default: 10],
+    size: [type: :integer, number: [min: 1, max: 500], default: 200],
     network: [type: :string, in: ["mainnet"], default: "mainnet"]
   }
 
@@ -147,17 +138,18 @@ defmodule FlowContractSyncerWeb.ContractController do
     with {:ok,
           %{
             network: network,
+            owner: owner,
             sort_by: sort_by,
             order_by: order_by,
             size: size
-          }} <- Tarams.cast(params, @index_params_schema) do
+          }} <- Tarams.cast(params, index_params_schema()) do
       network = Repo.get_by(Network, name: network)
 
       contracts =
         case sort_by do
-          "inserted_at" -> Contract.sort_by_inserted_at(network, order_by, size)
-          "dependants_count" -> Contract.sort_by_dependants(network, order_by, size)
-          "dependencies_count" -> Contract.sort_by_dependencies(network, order_by, size)
+          "inserted_at" -> Contract.sort_by_inserted_at(network, owner, order_by, size)
+          "dependants_count" -> Contract.sort_by_dependants(network, owner, order_by, size)
+          "dependencies_count" -> Contract.sort_by_dependencies(network, owner, order_by, size)
         end
 
       render(conn, :index, contracts: contracts)
@@ -166,6 +158,14 @@ defmodule FlowContractSyncerWeb.ContractController do
         conn
         |> put_status(:unprocessable_entity)
         |> render(:error, code: 104, message: Utils.format_errors(errors))
+    end
+  end
+
+  defp uuid_cast_func(value) do
+    if Utils.is_valid_uuid(value) do
+      {:ok, value}
+    else
+      {:error, "invalid uuid"}
     end
   end
 
