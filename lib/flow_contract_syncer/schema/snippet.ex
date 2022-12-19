@@ -5,7 +5,7 @@ defmodule FlowContractSyncer.Schema.Snippet do
   import Ecto.{Changeset, Query}
 
   alias FlowContractSyncer.Schema.Contract
-  alias FlowContractSyncer.{Repo, Utils}
+  alias FlowContractSyncer.Utils
 
   # No directly relationship with network or contract
   schema "snippets" do
@@ -53,33 +53,20 @@ defmodule FlowContractSyncer.Schema.Snippet do
     |> unique_constraint([:code_hash], name: :snippets_code_hash_index)
   end
 
-  def extract_from_contract(%Contract{code: contract_code, code_hash: contract_code_hash}) do
+  def extract_from_contract(%Contract{code: contract_code}) do
     source = Contract.remove_comments(contract_code)
 
     resources = source |> get_resources() |> Enum.map(& {&1, :resource})
     resource_interfaces = source |> get_resource_interfaces |> Enum.map(& {&1, :resource_interface})
     structs = source |> get_structs() |> Enum.map(& {&1, :struct})
     struct_interfaces = source |> get_struct_interfaces() |> Enum.map(& {&1, :struct_interface})
-    functions = source |> get_functions() |> Enum.map(& {&1, :function})
+    functions_with_return = source |> get_functions_with_return() |> Enum.map(& {&1, :function})
+    functions_without_return = source |> get_functions_without_return() |> Enum.map(& {&1, :function})
     events = source |> get_events() |> Enum.map(& {&1, :event})
     enums = source |> get_enums() |> Enum.map(& {&1, :enum})
 
-    snippets = [resources, resource_interfaces, structs, struct_interfaces, functions, events, enums] |> List.flatten()
-
-    Repo.transaction(fn ->
-      snippets
-      |> Enum.each(fn {code, type} ->
-        # ignore the conflict
-        %__MODULE__{}
-        |> changeset(%{
-          contract_code_hash: contract_code_hash,
-          code: code,
-          type: type,
-          status: :normal
-        })
-        |> Repo.insert!(on_conflict: :nothing)
-      end)
-    end)
+    [resources, resource_interfaces, structs, struct_interfaces, functions_with_return, functions_without_return, events, enums] 
+    |> List.flatten()
   end
 
   def get_resources(code) when is_binary(code) do
@@ -106,8 +93,14 @@ defmodule FlowContractSyncer.Schema.Snippet do
     |> Enum.map(fn [hd | _] -> hd end)
   end
 
-  def get_functions(code) when is_binary(code) do
-    regex = ~r/^ *(pub|priv|access\(self\)|access\(contract\)|access\(all\)|access\(account\)|pub\(set\))? *fun *(?<name>[A-Za-z_][A-Za-z0-9_]*) *\([^()]*\)* *:?[^{}]+?(?<body>\{([^{}]*(?3)?)*+\})/m
+  def get_functions_with_return(code) when is_binary(code) do
+    regex = ~r/^ *(pub|priv|access\(self\)|access\(contract\)|access\(all\)|access\(account\)|pub\(set\))? *fun *(?<name>[A-Za-z_][A-Za-z0-9_]*) *\([^()]*\)* *:((?! +return +)(?! *fun *)[^%])*(?<body>\{([^{}]*(?4)?)*+\})/m
+    Regex.scan(regex, code)
+    |> Enum.map(fn [hd | _] -> hd end)
+  end
+
+  def get_functions_without_return(code) when is_binary(code) do
+    regex = ~r/^ *(pub|priv|access\(self\)|access\(contract\)|access\(all\)|access\(account\)|pub\(set\))? *fun *(?<name>[A-Za-z_][A-Za-z0-9_]*) *\([^()]*\) *(?<body>\{([^{}]*(?3)?)*+\})/m
     Regex.scan(regex, code)
     |> Enum.map(fn [hd | _] -> hd end)
   end

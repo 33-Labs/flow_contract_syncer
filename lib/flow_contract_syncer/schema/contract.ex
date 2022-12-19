@@ -27,12 +27,12 @@ defmodule FlowContractSyncer.Schema.Contract do
     field :code, :string
     field :code_hash, :string
     field :deps_parsed, :boolean
-    field :code_parsed, :boolean
+    field :snippet_parsed, :boolean
 
     timestamps()
   end
 
-  @required_fields ~w(network_id uuid address name status deps_parsed code_parsed)a
+  @required_fields ~w(network_id uuid address name status deps_parsed snippet_parsed)a
   @optional_fields ~w(code_hash code)a
   def changeset(struct, params \\ %{}) do
     params =
@@ -234,17 +234,17 @@ defmodule FlowContractSyncer.Schema.Contract do
     |> Repo.update!()
   end
 
-  def code_unparsed(%Network{id: network_id}, limit \\ 100) do
+  def snippet_unparsed(%Network{id: network_id}, limit \\ 100) do
     __MODULE__
-    |> where(network_id: ^network_id, code_parsed: false)
+    |> where(network_id: ^network_id, snippet_parsed: false)
     |> order_by(asc: :id)
     |> limit(^limit)
     |> Repo.all()
   end
 
-  def to_code_parsed!(%__MODULE__{} = contract) do
+  def to_snippet_parsed!(%__MODULE__{} = contract) do
     contract
-    |> changeset(%{code_parsed: true})
+    |> changeset(%{snippet_parsed: true})
     |> Repo.update!()
   end
 
@@ -255,6 +255,7 @@ defmodule FlowContractSyncer.Schema.Contract do
     |> Enum.map(&"#{uuid}.#{&1}")
   end
 
+  # public only
   defp do_extract_events(code) do
     # regex = ~r/^ *pub? event [A-Za-z_][A-Za-z0-9_]*\(.*?\)/sm
     regex = ~r/^ *pub? event (?P<event_name>[A-Za-z_][A-Za-z0-9_]*)\(/m

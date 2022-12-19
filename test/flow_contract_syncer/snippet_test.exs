@@ -17,7 +17,7 @@ defmodule FlowContractSyncer.SnippetTest do
 
   test "should parse resources correctly", %{code: code} do
     snippets = Snippet.get_resources(code)
-    assert Enum.count(snippets) == 2
+    assert Enum.count(snippets) == 4
   end
 
   test "should parse resource interfaces correctly", %{code: code} do
@@ -25,9 +25,34 @@ defmodule FlowContractSyncer.SnippetTest do
     assert Enum.count(snippets) == 2
   end
 
-  test "should parse functions correctly", %{code: code} do
-    snippets = Snippet.get_functions(code)
-    assert Enum.count(snippets) == 4
+  test "should parse functions with return correctly", %{code: code} do
+    snippets = Snippet.get_functions_with_return(code)
+    assert Enum.count(snippets) == 6
+  end
+
+  test "should parse functions without return correctly", %{code: code} do
+    snippets = Snippet.get_functions_without_return(code)
+    assert Enum.count(snippets) == 1
+    want =
+    """
+          pub fun functionWithNoReturnValue() {
+              let a =fun (b: Int): Int {
+                  return b + 1
+              }
+  
+                          let c =fun(b: Int): Int {
+                  return b + 1
+              }
+  
+      let d = fun             (b: Int)      : Int {
+                  return b + 1
+              }
+      }
+    """
+    |> String.trim()
+
+    [snippet | _ ] = snippets
+    assert String.trim(snippet) == want
   end
 
   test "should parse enums correctly", %{code: code} do
@@ -109,7 +134,7 @@ defmodule FlowContractSyncer.SnippetTest do
   
       // full resource not formatted
       pub resource ResourceWithFieldsAndFuncs : 
-          ResourceInterface1,                     ResourceInterface2 {
+          ResourceInterface1,                     ResourceInterface2, AfunTest, AreturnTest {
           pub let field1: String
           pub let field2: {String: AnyStruct}
   
@@ -127,6 +152,22 @@ defmodule FlowContractSyncer.SnippetTest do
       }
   
       // functions
+  
+      // function with nested function
+      pub fun functionWithNoReturnValue() {
+              let a =fun (b: Int): Int {
+                  return b + 1
+              }
+  
+                          let c =fun(b: Int): Int {
+                  return b + 1
+              }
+  
+      let d = fun             (b: Int)      : Int {
+                  return b + 1
+              }
+      }
+  
       pub fun createEmptyResource(): @EmptyResource {
           return <- create EmptyResource()
       }
@@ -136,6 +177,26 @@ defmodule FlowContractSyncer.SnippetTest do
                @EmptyResource 
       {
           return <- create EmptyResource()
+      }
+  
+      pub resource interface AfunTest {
+      }
+  
+      pub resource interface AreturnTest {
+      }
+  
+      pub fun funtionWithRestrictionsAsReturnValue()     : @AnyResource{ResourceInterface1, AfunTest, AreturnTest} {
+                  let a = fun (b: Int): Int {
+                  return b + 1
+              }
+        return<- create ResourceWithFieldsAndFuncs(field1: "TEST", field2: {})   
+      }
+  
+          pub fun funtionWithRestrictionsAsReturnValue2()     : @AnyResource{ResourceInterface1, AfunTest, AreturnTest} {
+                  let a = fun (b: Int): Int {
+                  return b + 1
+              }
+        return<- create ResourceWithFieldsAndFuncs(field1: "TEST", field2: {})   
       }
   
       init() {

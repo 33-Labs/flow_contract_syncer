@@ -66,7 +66,7 @@ defmodule FlowContractSyncer.Repo.Migrations.CreateTables do
 
       # dependency parsed
       add :deps_parsed, :boolean, null: false, default: false
-      add :code_parsed, :boolean, null: false, default: false
+      add :snippet_parsed, :boolean, null: false, default: false
 
       timestamps()
     end
@@ -75,7 +75,7 @@ defmodule FlowContractSyncer.Repo.Migrations.CreateTables do
     create index("contracts", [:network_id, :address])
     create index("contracts", [:network_id, :name])
     create index("contracts", [:network_id, :deps_parsed])
-    create index("contracts", [:network_id, :code_parsed])
+    create index("contracts", [:network_id, :snippet_parsed])
     create index("contracts", [:network_id, :code_hash])
 
     create table("dependencies") do
