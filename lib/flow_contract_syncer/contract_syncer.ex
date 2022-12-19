@@ -99,7 +99,8 @@ defmodule FlowContractSyncer.ContractSyncer do
     end
     |> Contract.changeset(%{
       code: code,
-      parsed: false,
+      deps_parsed: false,
+      code_parsed: false,
       status: status
     })
     |> Repo.insert_or_update()

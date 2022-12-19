@@ -61,8 +61,12 @@ defmodule FlowContractSyncer.Repo.Migrations.CreateTables do
       # 1: removed
       add :status, :integer, null: false
       add :code, :text
+      # sha2_256 of code
+      add :code_hash, :string
 
-      add :parsed, :boolean, null: false, default: false
+      # dependency parsed
+      add :deps_parsed, :boolean, null: false, default: false
+      add :code_parsed, :boolean, null: false, default: false
 
       timestamps()
     end
@@ -70,7 +74,9 @@ defmodule FlowContractSyncer.Repo.Migrations.CreateTables do
     create unique_index("contracts", [:network_id, :uuid], name: :contracts_network_id_uuid_index)
     create index("contracts", [:network_id, :address])
     create index("contracts", [:network_id, :name])
-    create index("contracts", [:network_id, :parsed])
+    create index("contracts", [:network_id, :deps_parsed])
+    create index("contracts", [:network_id, :code_parsed])
+    create index("contracts", [:network_id, :code_hash])
 
     create table("dependencies") do
       add :contract_id, :bigint, null: false
@@ -93,5 +99,32 @@ defmodule FlowContractSyncer.Repo.Migrations.CreateTables do
              [:dependency_id, :contract_id],
              name: :dependencies_dependency_id_contract_id_index
            )
+
+    create table("snippets") do
+      add :contract_code_hash, :string, null: false
+      add :code_hash, :string, null: false
+
+      add :code, :text
+
+      # resource
+      # struct
+      # resource_interface
+      # struct_interface
+      # function
+      # enum
+      # event
+      add :type, :integer, null: false
+
+      # normal
+      # removed
+      add :status, :integer, null: false
+
+      timestamps()
+    end
+
+    create unique_index("snippets", [:code_hash], name: :snippets_code_hash_index)
+    create index("snippets", [:contract_code_hash])
+    create index("snippets", [:status])
+    create index("snippets", [:type])
   end
 end

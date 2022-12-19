@@ -25,13 +25,15 @@ defmodule FlowContractSyncer.Schema.Contract do
     field :name, :string
     field :status, Ecto.Enum, values: [normal: 0, removed: 1]
     field :code, :string
-    field :parsed, :boolean
+    field :code_hash, :string
+    field :deps_parsed, :boolean
+    field :code_parsed, :boolean
 
     timestamps()
   end
 
-  @required_fields ~w(network_id uuid address name status parsed)a
-  @optional_fields ~w(code)a
+  @required_fields ~w(network_id uuid address name status deps_parsed code_parsed)a
+  @optional_fields ~w(code_hash code)a
   def changeset(struct, params \\ %{}) do
     params =
       case Map.get(params, :address) do
@@ -49,6 +51,15 @@ defmodule FlowContractSyncer.Schema.Contract do
 
         uuid ->
           Map.put(params, :uuid, Utils.normalize_uuid(uuid))
+      end
+
+    params =
+      case Map.get(params, :code) do
+        nil ->
+          params
+
+        code ->
+          Map.put(params, :code_hash, Utils.calc_code_hash(code))
       end
 
     struct
@@ -107,10 +118,15 @@ defmodule FlowContractSyncer.Schema.Contract do
       case scope do
         "uuid" ->
           from c in query, where: c.network_id == ^network_id and like(c.uuid, ^search_term)
+
         "code" ->
           from c in query, where: c.network_id == ^network_id and like(c.code, ^search_term)
+
         s when s in ["uuid,code", "code,uuid"] ->
-          from c in query, where: c.network_id == ^network_id and (like(c.code, ^search_term) or like(c.uuid, ^search_term))
+          from c in query,
+            where:
+              c.network_id == ^network_id and
+                (like(c.code, ^search_term) or like(c.uuid, ^search_term))
       end
 
     Repo.all(query)
@@ -204,17 +220,31 @@ defmodule FlowContractSyncer.Schema.Contract do
     |> Repo.all()
   end
 
-  def unparsed(%Network{id: network_id}, limit \\ 100) do
+  def deps_unparsed(%Network{id: network_id}, limit \\ 100) do
     __MODULE__
-    |> where(network_id: ^network_id, parsed: false)
+    |> where(network_id: ^network_id, deps_parsed: false)
     |> order_by(asc: :id)
     |> limit(^limit)
     |> Repo.all()
   end
 
-  def to_parsed!(%__MODULE__{} = contract) do
+  def to_deps_parsed!(%__MODULE__{} = contract) do
     contract
-    |> changeset(%{parsed: true})
+    |> changeset(%{deps_parsed: true})
+    |> Repo.update!()
+  end
+
+  def code_unparsed(%Network{id: network_id}, limit \\ 100) do
+    __MODULE__
+    |> where(network_id: ^network_id, code_parsed: false)
+    |> order_by(asc: :id)
+    |> limit(^limit)
+    |> Repo.all()
+  end
+
+  def to_code_parsed!(%__MODULE__{} = contract) do
+    contract
+    |> changeset(%{code_parsed: true})
     |> Repo.update!()
   end
 
@@ -246,7 +276,7 @@ defmodule FlowContractSyncer.Schema.Contract do
   # Should delete all the comments before run the regex
   # Or some unexisted contracts will be involved in
   # e.g. https://flow-view-source.com/mainnet/account/0x82eafacd9c87f83a/contract/Profile
-  defp remove_comments(code) do
+  def remove_comments(code) do
     regex = ~r/\/\*([\s\S]*?)\*\//
 
     Regex.replace(regex, code, "")

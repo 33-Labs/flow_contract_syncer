@@ -42,7 +42,8 @@ defmodule FlowContractSyncer.DependencyParserTest do
         name: "LUSD",
         status: :normal,
         code: "",
-        parsed: false
+        deps_parsed: false,
+        code_parsed: false
       }
       |> Repo.insert!()
 
@@ -54,7 +55,8 @@ defmodule FlowContractSyncer.DependencyParserTest do
         name: "RUSD",
         status: :normal,
         code: "import LUSD from 0x25ec8cce566c4ca7\n/// SINGLE LINE COMMENT",
-        parsed: false
+        deps_parsed: false,
+        code_parsed: false
       }
       |> Repo.insert!()
 
@@ -66,7 +68,8 @@ defmodule FlowContractSyncer.DependencyParserTest do
         name: "SUSD",
         status: :normal,
         code: "/** COMMENTS LINE 1 \n COMMENTS LINE 2 **/\nimport LUSD from 0x25ec8cce566c4ca7\n",
-        parsed: false
+        deps_parsed: false,
+        code_parsed: false
       }
       |> Repo.insert!()
 

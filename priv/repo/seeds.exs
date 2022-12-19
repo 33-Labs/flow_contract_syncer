@@ -54,7 +54,8 @@ changesets =
       name: name,
       status: :normal,
       code: code,
-      parsed: false
+      deps_parsed: false,
+      code_parsed: false
     })
   end)
 

@@ -21,11 +21,11 @@ defmodule FlowContractSyncer.DependencyParser do
   def parse_deps(%Network{} = network) do
     chunk_size = Network.deps_parse_chunk_size(network) || @chunk_size
 
-    Contract.unparsed(network, chunk_size)
+    Contract.deps_unparsed(network, chunk_size)
     |> Enum.each(fn contract ->
       case generate_deps(contract) do
         :ok ->
-          Contract.to_parsed!(contract)
+          Contract.to_deps_parsed!(contract)
 
         error ->
           Logger.error(

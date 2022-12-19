@@ -28,7 +28,7 @@ defmodule FlowContractSyncer.ContractSyncerTest do
     [contract] = Contract |> Repo.all()
     assert contract.status == :removed
     assert contract.code == "\x03\x03"
-    assert contract.parsed == false
+    assert contract.deps_parsed == false
 
     assert Enum.all?(ContractEvent |> Repo.all(), & &1.processed)
   end
