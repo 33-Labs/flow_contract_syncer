@@ -101,6 +101,7 @@ defmodule FlowContractSyncer.Repo.Migrations.CreateTables do
            )
 
     create table("snippets") do
+      add :network_id, :bigint, null: false
       add :contract_code_hash, :string, null: false
       add :code_hash, :string, null: false
 
@@ -122,9 +123,9 @@ defmodule FlowContractSyncer.Repo.Migrations.CreateTables do
       timestamps()
     end
 
-    create unique_index("snippets", [:code_hash], name: :snippets_code_hash_index)
-    create index("snippets", [:contract_code_hash])
-    create index("snippets", [:status])
-    create index("snippets", [:type])
+    create unique_index("snippets", [:code_hash, :network_id], name: :snippets_code_hash_network_id_index)
+    create index("snippets", [:network_id, :contract_code_hash])
+    create index("snippets", [:network_id, :status])
+    create index("snippets", [:network_id, :type])
   end
 end

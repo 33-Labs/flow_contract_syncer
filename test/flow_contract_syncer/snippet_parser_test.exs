@@ -26,7 +26,6 @@ defmodule FlowContractSyncer.SnippetParserTest do
     types = [:resource, :struct, :resource_interface, :struct_interface, :enum, :event, :function] |> Enum.sort()
     types_got = snippets |> Enum.map(& &1.type) |> Enum.sort()
     assert types == types_got
-    IO.inspect snippets
   end
 
   defp create_contract(context) do

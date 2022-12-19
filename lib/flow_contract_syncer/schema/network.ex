@@ -52,4 +52,12 @@ defmodule FlowContractSyncer.Schema.Network do
   def snippets_parse_interval(%__MODULE__{config: config}) do
     config["snippets_parse_interval"]
   end
+
+  def snippets_clean_chunk_size(%__MODULE__{config: config}) do
+    config["snippets_clean_chunk_size"]
+  end
+
+  def snippets_clean_interval(%__MODULE__{config: config}) do
+    config["snippets_clean_interval"]
+  end
 end

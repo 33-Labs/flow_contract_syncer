@@ -39,16 +39,16 @@ defmodule FlowContractSyncer.SnippetParser do
       end
     end) 
 
-    sync_interval = Network.snippets_parse_interval(network) || @interval
+    interval = Network.snippets_parse_interval(network) || @interval
 
     receive do
       :parse_snippets -> parse_snippets(network)
     after
-      sync_interval -> parse_snippets(network)
+      interval -> parse_snippets(network)
     end
   end
 
-  defp insert_snippets_to_db(%Contract{code_hash: contract_code_hash}, snippets) 
+  defp insert_snippets_to_db(%Contract{network_id: network_id, code_hash: contract_code_hash}, snippets) 
     when is_list(snippets) do
     Repo.transaction(fn ->
       snippets
@@ -56,6 +56,7 @@ defmodule FlowContractSyncer.SnippetParser do
         # ignore the conflict
         %Snippet{}
         |> Snippet.changeset(%{
+          network_id: network_id,
           contract_code_hash: contract_code_hash,
           code: code,
           type: type,

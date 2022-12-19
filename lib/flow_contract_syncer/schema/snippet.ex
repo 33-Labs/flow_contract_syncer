@@ -4,11 +4,13 @@ defmodule FlowContractSyncer.Schema.Snippet do
   use Ecto.Schema
   import Ecto.{Changeset, Query}
 
-  alias FlowContractSyncer.Schema.Contract
-  alias FlowContractSyncer.Utils
+  alias FlowContractSyncer.Schema.{Contract, Network}
+  alias FlowContractSyncer.{Repo, Utils}
 
   # No directly relationship with network or contract
   schema "snippets" do
+    belongs_to :network, Network
+
     field :contract_code_hash, :string
     field :code_hash, :string
 
@@ -36,7 +38,7 @@ defmodule FlowContractSyncer.Schema.Snippet do
     timestamps()
   end
 
-  @required_fields ~w(contract_code_hash code_hash code type status)a
+  @required_fields ~w(network_id contract_code_hash code_hash code type status)a
   def changeset(struct, params \\ %{}) do
     params =
       case Map.get(params, :code) do
@@ -50,7 +52,20 @@ defmodule FlowContractSyncer.Schema.Snippet do
     struct
     |> cast(params, @required_fields)
     |> validate_required(@required_fields)
-    |> unique_constraint([:code_hash], name: :snippets_code_hash_index)
+    |> unique_constraint([:code_hash, :network_id], name: :snippets_code_hash_network_id_index)
+  end
+
+  def normal(%Network{id: network_id}, size \\ 100) do
+    __MODULE__
+    |> where(network_id: ^network_id, status: :normal)
+    |> limit(^size)
+    |> Repo.all()
+  end
+
+  def to_removed(%__MODULE__{} = struct) do
+    struct
+    |> changeset(%{status: :removed})
+    |> Repo.update()
   end
 
   def extract_from_contract(%Contract{code: contract_code}) do
