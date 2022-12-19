@@ -94,7 +94,7 @@ defmodule FlowContractSyncer.Schema.Snippet do
   end
 
   def get_functions_with_return(code) when is_binary(code) do
-    regex = ~r/^ *(pub|priv|access\(self\)|access\(contract\)|access\(all\)|access\(account\)|pub\(set\))? *fun *(?<name>[A-Za-z_][A-Za-z0-9_]*) *\([^()]*\)* *:((?! +return +)(?! *fun *)[^%])*(?<body>\{([^{}]*(?4)?)*+\})/m
+    regex = ~r/^ *(pub|priv|access\(self\)|access\(contract\)|access\(all\)|access\(account\)|pub\(set\))? *fun *(?<name>[A-Za-z_][A-Za-z0-9_]*) *\([^()]*\)* *:((?! +return +)(?! *fun *\()[^%])*(?<body>\{([^{}]*(?4)?)*+\})/m
     Regex.scan(regex, code)
     |> Enum.map(fn [hd | _] -> hd end)
   end
