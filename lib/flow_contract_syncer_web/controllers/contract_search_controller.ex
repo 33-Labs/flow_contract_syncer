@@ -53,7 +53,6 @@ defmodule FlowContractSyncerWeb.ContractSearchController do
             scope: scope
           }} <- Tarams.cast(params, @search_params_schema) do
       network = Repo.get_by(Network, name: network)
-      keyword = String.replace(keyword, ~r/(?!\.)\W/u, "")
       contracts = Contract.search(network, keyword, scope)
       render(conn, :contract_search, contracts: contracts)
     else

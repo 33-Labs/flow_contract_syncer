@@ -85,11 +85,11 @@ defmodule FlowContractSyncer.Schema.Contract do
     )
   end
 
-  def search(%Network{id: network_id}, keyword, "uuid") do
+  def search(%Network{id: network_id}, keyword, scope) do
     dependants = group_by_dependants()
     dependencies = group_by_dependencies()
 
-    search_term = "#{keyword}:*"
+    search_term = "%#{keyword}%"
 
     query =
       from c in __MODULE__,
@@ -97,65 +97,21 @@ defmodule FlowContractSyncer.Schema.Contract do
         on: d.dependency_id == c.id,
         left_join: dd in subquery(dependencies),
         on: dd.contract_id == c.id,
-        where:
-          c.network_id == ^network_id and
-            fragment("to_tsvector('english', uuid) @@ to_tsquery(?)", ^search_term),
         select: %{
           uuid: c.uuid,
           dependants_count: coalesce(d.count, 0),
           dependencies_count: coalesce(dd.count, 0)
         }
-
-    Repo.all(query)
-  end
-
-  def search(%Network{id: network_id}, keyword, "code") do
-    dependants = group_by_dependants()
-    dependencies = group_by_dependencies()
-
-    search_term = "#{keyword}:*"
 
     query =
-      from c in __MODULE__,
-        left_join: d in subquery(dependants),
-        on: d.dependency_id == c.id,
-        left_join: dd in subquery(dependencies),
-        on: dd.contract_id == c.id,
-        where:
-          c.network_id == ^network_id and
-            fragment("to_tsvector('english', coalesce(code, ' ')) @@ to_tsquery(?)", ^search_term),
-        select: %{
-          uuid: c.uuid,
-          dependants_count: coalesce(d.count, 0),
-          dependencies_count: coalesce(dd.count, 0)
-        }
-
-    Repo.all(query)
-  end
-
-  def search(%Network{id: network_id}, keyword, scope) when scope in ["uuid,code", "code,uuid"] do
-    dependants = group_by_dependants()
-    dependencies = group_by_dependencies()
-
-    search_term = "#{keyword}:*"
-
-    query =
-      from c in __MODULE__,
-        left_join: d in subquery(dependants),
-        on: d.dependency_id == c.id,
-        left_join: dd in subquery(dependencies),
-        on: dd.contract_id == c.id,
-        where:
-          c.network_id == ^network_id and
-            fragment(
-              "to_tsvector('english', uuid || ' ' || coalesce(code, ' ')) @@ to_tsquery(?)",
-              ^search_term
-            ),
-        select: %{
-          uuid: c.uuid,
-          dependants_count: coalesce(d.count, 0),
-          dependencies_count: coalesce(dd.count, 0)
-        }
+      case scope do
+        "uuid" ->
+          from c in query, where: c.network_id == ^network_id and like(c.uuid, ^search_term)
+        "code" ->
+          from c in query, where: c.network_id == ^network_id and like(c.code, ^search_term)
+        s when s in ["uuid,code", "code,uuid"] ->
+          from c in query, where: c.network_id == ^network_id and (like(c.code, ^search_term) or like(c.uuid, ^search_term))
+      end
 
     Repo.all(query)
   end
