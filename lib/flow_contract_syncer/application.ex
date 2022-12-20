@@ -29,15 +29,19 @@ defmodule FlowContractSyncer.Application do
     ret = {:ok, _pid} = Supervisor.start_link(children, opts)
 
     if env() == :prod do
-      Network
-      |> FlowContractSyncer.Repo.all()
-      |> Enum.filter(& &1.is_enabled)
-      |> Enum.map(fn network ->
-        {:ok, _child} = start_contract_syncer_sup(network)
-      end)
+      start_enabled_networks()
     end
 
     ret
+  end
+
+  def start_enabled_networks do
+    Network
+    |> FlowContractSyncer.Repo.all()
+    |> Enum.filter(& &1.is_enabled)
+    |> Enum.map(fn network ->
+      {:ok, _child} = start_contract_syncer_sup(network)
+    end)
   end
 
   defp start_contract_syncer_sup(network) do

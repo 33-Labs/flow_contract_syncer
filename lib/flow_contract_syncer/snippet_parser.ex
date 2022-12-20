@@ -14,7 +14,7 @@ defmodule FlowContractSyncer.SnippetParser do
   @chunk_size 100
 
   def start_link(%Network{name: name, id: id} = network) do
-    Logger.info("[#{__MODULE__}_#{name}] stared")
+    Logger.info("[#{__MODULE__}_#{name}] started")
     {:ok, pid} = Task.start_link(__MODULE__, :parse_snippets, [network])
     Process.register(pid, :"#{name}_#{id}_snippet_parser")
     {:ok, pid}
@@ -26,10 +26,11 @@ defmodule FlowContractSyncer.SnippetParser do
     Contract.snippet_unparsed(network, chunk_size)
     |> Enum.each(fn contract ->
       snippets = Snippet.extract_from_contract(contract)
+
       case insert_snippets_to_db(contract, snippets) do
         {:ok, _} ->
           Contract.to_snippet_parsed!(contract)
-        
+
         error ->
           Logger.error(
             "[#{__MODULE__}] failed to parse snippets for contract: #{contract.id}. error: #{inspect(error)}"
@@ -37,7 +38,7 @@ defmodule FlowContractSyncer.SnippetParser do
 
           {:error, :parse_failed}
       end
-    end) 
+    end)
 
     interval = Network.snippets_parse_interval(network) || @interval
 
@@ -48,8 +49,11 @@ defmodule FlowContractSyncer.SnippetParser do
     end
   end
 
-  defp insert_snippets_to_db(%Contract{network_id: network_id, code_hash: contract_code_hash}, snippets) 
-    when is_list(snippets) do
+  defp insert_snippets_to_db(
+         %Contract{network_id: network_id, code_hash: contract_code_hash},
+         snippets
+       )
+       when is_list(snippets) do
     Repo.transaction(fn ->
       snippets
       |> Enum.each(fn {code, type} ->

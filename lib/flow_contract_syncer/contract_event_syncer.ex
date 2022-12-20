@@ -19,7 +19,7 @@ defmodule FlowContractSyncer.ContractEventSyncer do
   @removed_event "flow.AccountContractRemoved"
 
   def start_link(%Network{name: name, id: id} = network) do
-    Logger.info("[#{__MODULE__}_#{name}] stared")
+    Logger.info("[#{__MODULE__}_#{name}] started")
     {:ok, pid} = Task.start_link(__MODULE__, :event_sync, [network])
     Process.register(pid, :"#{name}_#{id}_event_syncer")
 

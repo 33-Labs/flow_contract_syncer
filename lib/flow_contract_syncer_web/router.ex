@@ -27,9 +27,12 @@ defmodule FlowContractSyncerWeb.Router do
 
     get("/status", StatusController, :show)
 
-    get("/search", ContractSearchController, :search)
+    get("/contracts/search", ContractSearchController, :search)
     get("/contracts", ContractController, :index)
     get("/contracts/:uuid", ContractController, :show)
+
+    # get("/snippets/search", SnippetSearchController, :search)
+    # get("/snippets/:code_hash", SnippetController, :show)
   end
 
   scope "/api/v1/swagger" do

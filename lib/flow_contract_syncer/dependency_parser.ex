@@ -12,7 +12,7 @@ defmodule FlowContractSyncer.DependencyParser do
   @chunk_size 100
 
   def start_link(%Network{name: name, id: id} = network) do
-    Logger.info("[#{__MODULE__}_#{name}] stared")
+    Logger.info("[#{__MODULE__}_#{name}] started")
     {:ok, pid} = Task.start_link(__MODULE__, :parse_deps, [network])
     Process.register(pid, :"#{name}_#{id}_dependency_parser")
     {:ok, pid}
