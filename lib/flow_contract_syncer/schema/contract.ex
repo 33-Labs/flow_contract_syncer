@@ -5,7 +5,7 @@ defmodule FlowContractSyncer.Schema.Contract do
   import Ecto.{Changeset, Query}
 
   alias FlowContractSyncer.{Repo, Utils}
-  alias FlowContractSyncer.Schema.{Dependency, Network}
+  alias FlowContractSyncer.Schema.{ContractSnippet, Dependency, Network, Snippet}
 
   schema "contracts" do
     belongs_to :network, Network
@@ -19,6 +19,8 @@ defmodule FlowContractSyncer.Schema.Contract do
                  __MODULE__,
                  join_through: Dependency,
                  join_keys: [dependency_id: :id, contract_id: :id]
+
+    many_to_many :snippets, Snippet, join_through: ContractSnippet
 
     field :uuid, :string
     field :address, :string
@@ -218,6 +220,49 @@ defmodule FlowContractSyncer.Schema.Contract do
     query
     |> filter_by_owner(owner)
     |> Repo.all()
+  end
+
+  def get_snippets(%__MODULE__{code: contract_code}) do
+    import Snippet,
+      only: [
+        get_resources: 1,
+        get_resource_interfaces: 1,
+        get_structs: 1,
+        get_struct_interfaces: 1,
+        get_functions_with_return: 1,
+        get_functions_without_return: 1,
+        get_enums: 1,
+        get_events: 1
+      ]
+
+    source = remove_comments(contract_code)
+
+    resources = source |> get_resources() |> Enum.map(&{&1, :resource})
+
+    resource_interfaces =
+      source |> get_resource_interfaces |> Enum.map(&{&1, :resource_interface})
+
+    structs = source |> get_structs() |> Enum.map(&{&1, :struct})
+    struct_interfaces = source |> get_struct_interfaces() |> Enum.map(&{&1, :struct_interface})
+    functions_with_return = source |> get_functions_with_return() |> Enum.map(&{&1, :function})
+
+    functions_without_return =
+      source |> get_functions_without_return() |> Enum.map(&{&1, :function})
+
+    events = source |> get_events() |> Enum.map(&{&1, :event})
+    enums = source |> get_enums() |> Enum.map(&{&1, :enum})
+
+    [
+      resources,
+      resource_interfaces,
+      structs,
+      struct_interfaces,
+      functions_with_return,
+      functions_without_return,
+      events,
+      enums
+    ]
+    |> List.flatten()
   end
 
   def deps_unparsed(%Network{id: network_id}, limit \\ 100) do

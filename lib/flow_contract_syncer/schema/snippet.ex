@@ -4,16 +4,14 @@ defmodule FlowContractSyncer.Schema.Snippet do
   use Ecto.Schema
   import Ecto.{Changeset, Query}
 
-  alias FlowContractSyncer.Schema.{Contract, Network}
+  alias FlowContractSyncer.Schema.Network
   alias FlowContractSyncer.{Repo, Utils}
 
   # No directly relationship with network or contract
   schema "snippets" do
     belongs_to :network, Network
 
-    field :contract_code_hash, :string
     field :code_hash, :string
-
     field :code, :string
 
     field :type, Ecto.Enum,
@@ -38,7 +36,7 @@ defmodule FlowContractSyncer.Schema.Snippet do
     timestamps()
   end
 
-  @required_fields ~w(network_id contract_code_hash code_hash code type status)a
+  @required_fields ~w(network_id code_hash code type status)a
   def changeset(struct, params \\ %{}) do
     params =
       case Map.get(params, :code) do
@@ -68,37 +66,6 @@ defmodule FlowContractSyncer.Schema.Snippet do
     struct
     |> changeset(%{status: :removed})
     |> Repo.update()
-  end
-
-  def extract_from_contract(%Contract{code: contract_code}) do
-    source = Contract.remove_comments(contract_code)
-
-    resources = source |> get_resources() |> Enum.map(&{&1, :resource})
-
-    resource_interfaces =
-      source |> get_resource_interfaces |> Enum.map(&{&1, :resource_interface})
-
-    structs = source |> get_structs() |> Enum.map(&{&1, :struct})
-    struct_interfaces = source |> get_struct_interfaces() |> Enum.map(&{&1, :struct_interface})
-    functions_with_return = source |> get_functions_with_return() |> Enum.map(&{&1, :function})
-
-    functions_without_return =
-      source |> get_functions_without_return() |> Enum.map(&{&1, :function})
-
-    events = source |> get_events() |> Enum.map(&{&1, :event})
-    enums = source |> get_enums() |> Enum.map(&{&1, :enum})
-
-    [
-      resources,
-      resource_interfaces,
-      structs,
-      struct_interfaces,
-      functions_with_return,
-      functions_without_return,
-      events,
-      enums
-    ]
-    |> List.flatten()
   end
 
   def get_resources(code) when is_binary(code) do
@@ -196,7 +163,7 @@ defmodule FlowContractSyncer.Schema.Snippet do
     do_get_leading_whitespaces_count(rest, count + 1)
   end
 
-  defp do_get_leading_whitespaces_count(rest, count) do
+  defp do_get_leading_whitespaces_count(_rest, count) do
     count
   end
 end
