@@ -71,6 +71,32 @@ defmodule FlowContractSyncer.Schema.Contract do
     |> unique_constraint([:network_id, :uuid], name: :contracts_network_id_uuid_index)
   end
 
+  def remove_dependencies!(%__MODULE__{id: contract_id} = contract) do
+    {:ok, _} =
+      Repo.transaction(fn ->
+        Dependency
+        |> where(contract_id: ^contract_id)
+        |> Repo.delete_all()
+
+        contract
+        |> changeset(%{deps_parsed: false})
+        |> Repo.update!()
+      end)
+  end
+
+  def remove_snippets!(%__MODULE__{id: contract_id} = contract) do
+    {:ok, _} =
+      Repo.transaction(fn ->
+        ContractSnippet
+        |> where(contract_id: ^contract_id)
+        |> Repo.delete_all()
+
+        contract
+        |> changeset(%{snippet_parsed: false})
+        |> Repo.update!()
+      end)
+  end
+
   def create_uuid(address, name) do
     "A.#{String.replace(address, "0x", "")}.#{name}"
   end

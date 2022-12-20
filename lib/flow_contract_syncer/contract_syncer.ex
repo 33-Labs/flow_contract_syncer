@@ -90,20 +90,48 @@ defmodule FlowContractSyncer.ContractSyncer do
         status
       )
       when status in [:normal, :removed] do
-    Contract
-    |> where(network_id: ^network_id, uuid: ^uuid)
-    |> Repo.one()
-    |> case do
-      %Contract{} = old_contract -> old_contract
-      nil -> contract
-    end
-    |> Contract.changeset(%{
-      code: code,
-      deps_parsed: false,
-      snippet_parsed: false,
-      status: status
-    })
-    |> Repo.insert_or_update()
+    old_contract =
+      Contract
+      |> where(network_id: ^network_id, uuid: ^uuid)
+      |> Repo.one()
+
+    remove_relationships =
+      case old_contract do
+        %Contract{} ->
+          new_code_hash = Utils.calc_code_hash(code)
+          old_contract.code_hash != new_code_hash
+
+        nil ->
+          false
+      end
+
+    item =
+      case old_contract do
+        %Contract{} -> old_contract
+        nil -> contract
+      end
+
+    Repo.transaction(fn ->
+      item
+      |> Contract.changeset(%{
+        code: code,
+        deps_parsed: false,
+        snippet_parsed: false,
+        status: status
+      })
+      |> Repo.insert_or_update()
+      |> case do
+        {:ok, contract} ->
+          if remove_relationships do
+            Contract.remove_dependencies!(contract)
+            Contract.remove_snippets!(contract)
+          end
+
+        error ->
+          Logger.error("[#{__MODULE__}] insert contract failed, error: #{inspect(error)}")
+          Repo.rollback(:insert_contract_failed)
+      end
+    end)
   end
 
   def get_contract_code(%Network{} = network, address, name, opts \\ []) do
