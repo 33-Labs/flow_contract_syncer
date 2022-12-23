@@ -42,7 +42,9 @@ defmodule FlowContractSyncerWeb.ContractSearchController do
   @search_params_schema %{
     keyword: [type: :string, required: true, length: [min: 3]],
     network: [type: :string, in: ["mainnet"], default: "mainnet"],
-    scope: [type: :string, in: ["code", "uuid", "uuid,code", "code,uuid"], default: ["uuid,code"]]
+    scope: [type: :string, in: ["code", "uuid", "uuid,code", "code,uuid"], default: ["uuid,code"]],
+    offset: [type: :integer, number: [min: 0], default: 0],
+    limit: [type: :integer, number: [min: 1, max: 500], default: 200]
   }
 
   def search(conn, params) do
@@ -50,10 +52,12 @@ defmodule FlowContractSyncerWeb.ContractSearchController do
           %{
             keyword: keyword,
             network: network,
-            scope: scope
+            scope: scope,
+            offset: offset,
+            limit: limit
           }} <- Tarams.cast(params, @search_params_schema) do
       network = Repo.get_by(Network, name: network)
-      contracts = Contract.search(network, keyword, scope)
+      contracts = Contract.search(network, keyword, scope, offset, limit)
       render(conn, :contract_search, contracts: contracts)
     else
       {:error, errors} ->

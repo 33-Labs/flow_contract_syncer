@@ -7,7 +7,8 @@ defmodule FlowContractSyncerWeb.ContractView do
 
   def render("show.json", %{contract: contract}) do
     events = Contract.extract_events(contract)
-    contract = Contract.with_deps_uuids(contract)
+    dependants_count = Contract.dependants_count(contract)
+    dependencies_count = Contract.dependencies_count(contract)
 
     %{
       code: 0,
@@ -17,8 +18,8 @@ defmodule FlowContractSyncerWeb.ContractView do
         name: contract.name,
         code: contract.code,
         events: events,
-        dependencies: contract.dependencies,
-        dependants: contract.dependants
+        dependants_count: dependants_count,
+        dependencies_count: dependencies_count
       }
     }
   end
@@ -30,6 +31,36 @@ defmodule FlowContractSyncerWeb.ContractView do
         render_many(contracts, FlowContractSyncerWeb.PartialContractView, "partial_contract.json",
           as: :partial_contract
         )
+    }
+  end
+
+  def render("dependencies.json", %{
+    uuid: uuid,
+    dependencies: dependencies, 
+    dependencies_count: count
+  }) when is_binary(uuid) and is_list(dependencies) and is_integer(count) do
+    %{
+      code: 0,
+      data: %{
+        uuid: uuid,
+        dependencies: dependencies, 
+        total_dependants_count: count
+      } 
+    }
+  end
+
+  def render("dependants.json", %{
+    uuid: uuid,
+    dependants: dependants, 
+    dependants_count: count
+  }) when is_binary(uuid) and is_list(dependants) and is_integer(count) do
+    %{
+      code: 0,
+      data: %{
+        uuid: uuid,
+        dependants: dependants, 
+        total_dependants_count: count
+      } 
     }
   end
 

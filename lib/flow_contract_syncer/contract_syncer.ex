@@ -127,6 +127,8 @@ defmodule FlowContractSyncer.ContractSyncer do
             Contract.remove_snippets!(contract)
           end
 
+          contract
+
         error ->
           Logger.error("[#{__MODULE__}] insert contract failed, error: #{inspect(error)}")
           Repo.rollback(:insert_contract_failed)

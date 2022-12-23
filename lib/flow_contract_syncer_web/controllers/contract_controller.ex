@@ -124,14 +124,15 @@ defmodule FlowContractSyncerWeb.ContractController do
 
   def index_params_schema,
     do: %{
-      sort_by: [
+      owner: [type: :string],
+      order_by: [
         type: :string,
         in: ["inserted_at", "dependants_count", "dependencies_count"],
-        required: true
+        default: "inserted_at"
       ],
-      owner: [type: :string],
-      order_by: [type: :string, in: ["desc", "asc"], default: "desc"],
-      size: [type: :integer, number: [min: 1, max: 500], default: 200],
+      order_by_direction: [type: :string, in: ["desc", "asc"], default: "desc"],
+      offset: [type: :integer, number: [min: 0], default: 0],
+      limit: [type: :integer, number: [min: 1, max: 500], default: 200],
       network: [type: :string, in: ["mainnet"], default: "mainnet"]
     }
 
@@ -140,17 +141,18 @@ defmodule FlowContractSyncerWeb.ContractController do
           %{
             network: network,
             owner: owner,
-            sort_by: sort_by,
             order_by: order_by,
-            size: size
+            order_by_direction: direction,
+            offset: offset,
+            limit: limit
           }} <- Tarams.cast(params, index_params_schema()) do
       network = Repo.get_by(Network, name: network)
 
       contracts =
-        case sort_by do
-          "inserted_at" -> Contract.sort_by_inserted_at(network, owner, order_by, size)
-          "dependants_count" -> Contract.sort_by_dependants(network, owner, order_by, size)
-          "dependencies_count" -> Contract.sort_by_dependencies(network, owner, order_by, size)
+        case order_by do
+          "inserted_at" -> Contract.order_by(:inserted_at, network, owner, direction, offset, limit)
+          "dependants_count" -> Contract.order_by(:dependants_count, network, owner, direction, offset, limit)
+          "dependencies_count" -> Contract.order_by(:dependencies_count, network, owner, direction, offset, limit)
         end
 
       render(conn, :index, contracts: contracts)
@@ -161,6 +163,84 @@ defmodule FlowContractSyncerWeb.ContractController do
         |> render(:error, code: 104, message: Utils.format_errors(errors))
     end
   end
+
+  def dependencies_params_schema,
+    do: %{
+      uuid: [type: :string, required: true, cast_func: &uuid_cast_func/1],
+      order_by: [ type: :string, in: ["address", "name"], default: "address"],
+      order_by_direction: [type: :string, in: ["desc", "asc"], default: "desc"],
+      offset: [type: :integer, number: [min: 0], default: 0],
+      limit: [type: :integer, number: [min: 1, max: 500], default: 200],
+      network: [type: :string, in: ["mainnet"], default: "mainnet"]
+    }
+
+  def dependencies(conn, params) do
+    with {:ok,
+          %{
+            network: network,
+            uuid: uuid,
+            order_by: order_by,
+            order_by_direction: direction,
+            offset: offset,
+            limit: limit
+          }} <- Tarams.cast(params, dependencies_params_schema()) do
+      network = Repo.get_by(Network, name: network)
+      contract = Repo.get_by(Contract, uuid: uuid, network_id: network.id)
+
+      dependencies_count = Contract.dependencies_count(contract)
+      dependencies = Contract.dependencies(contract, String.to_atom(order_by), direction, offset, limit)
+
+      render(conn, :dependencies, 
+        uuid: contract.uuid,
+        dependencies: dependencies,
+        dependencies_count: dependencies_count
+      )
+    else
+      {:error, errors} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(:error, code: 104, message: Utils.format_errors(errors))
+    end
+  end
+
+  def dependants_params_schema,
+  do: %{
+    uuid: [type: :string, required: true, cast_func: &uuid_cast_func/1],
+    order_by: [ type: :string, in: ["address", "name"], default: "address"],
+    order_by_direction: [type: :string, in: ["desc", "asc"], default: "desc"],
+    offset: [type: :integer, number: [min: 0], default: 0],
+    limit: [type: :integer, number: [min: 1, max: 500], default: 200],
+    network: [type: :string, in: ["mainnet"], default: "mainnet"]
+  }
+
+def dependants(conn, params) do
+  with {:ok,
+        %{
+          network: network,
+          uuid: uuid,
+          order_by: order_by,
+          order_by_direction: direction,
+          offset: offset,
+          limit: limit
+        }} <- Tarams.cast(params, dependants_params_schema()) do
+    network = Repo.get_by(Network, name: network)
+    contract = Repo.get_by(Contract, uuid: uuid, network_id: network.id)
+
+    dependants_count = Contract.dependants_count(contract)
+    dependants = Contract.dependants(contract, String.to_atom(order_by), direction, offset, limit)
+
+    render(conn, :dependants, 
+      uuid: contract.uuid,
+      dependants: dependants,
+      dependants_count: dependants_count
+    )
+  else
+    {:error, errors} ->
+      conn
+      |> put_status(:unprocessable_entity)
+      |> render(:error, code: 104, message: Utils.format_errors(errors))
+  end
+end
 
   defp uuid_cast_func(value) do
     if Utils.is_valid_uuid(value) do
