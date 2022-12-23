@@ -24,7 +24,8 @@ defmodule FlowContractSyncerWeb.SnippetView do
     %{
       code_hash: snippet.code_hash,
       code: snippet.code,
-      type: snippet.type
+      type: snippet.type,
+      contracts_count: snippet.contracts_count
     }
   end
 end

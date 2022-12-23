@@ -329,7 +329,66 @@
             "Bearer": []
           }
         ],
-        "summary": "Search contract",
+        "summary": "Search contracts, order by dependants count desc",
+        "tags": [
+          "Search"
+        ]
+      }
+    },
+    "/api/v1/snippets/search": {
+      "get": {
+        "description": "",
+        "operationId": "search_snippets",
+        "parameters": [
+          {
+            "description": "Keyword for searching, case-insensitive",
+            "in": "query",
+            "name": "keyword",
+            "required": true,
+            "type": "string",
+            "x-example": "topshot"
+          },
+          {
+            "description": "Flow network, default value is \"mainnet\"",
+            "enum": [
+              "mainnet"
+            ],
+            "in": "query",
+            "name": "network",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "description": "Should be one of all, resource, struct, interface, function, enum, event",
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/PartialContractsResp"
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "schema": {
+              "$ref": "#/definitions/ErrorResp"
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Search snippets",
         "tags": [
           "Search"
         ]

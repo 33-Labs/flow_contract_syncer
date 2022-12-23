@@ -4,7 +4,7 @@ defmodule FlowContractSyncer.Schema.Snippet do
   use Ecto.Schema
   import Ecto.{Changeset, Query}
 
-  alias FlowContractSyncer.Schema.Network
+  alias FlowContractSyncer.Schema.{ContractSnippet, Network}
   alias FlowContractSyncer.{Repo, Utils}
 
   # No directly relationship with network or contract
@@ -66,6 +66,46 @@ defmodule FlowContractSyncer.Schema.Snippet do
     struct
     |> changeset(%{status: :removed})
     |> Repo.update()
+  end
+
+  def search(%Network{id: network_id}, keyword, type, offset, limit)
+    when is_binary(keyword) and type in ["resource", "struct", "interface", "function", "enum", "event", "all"] and 
+    is_integer(offset) and is_integer(limit) do
+
+    types = case type do
+      "interface" -> [:resource_interface, :struct_interface]
+      otherwise -> [String.to_atom(otherwise)]
+    end
+
+    search_term = "%#{keyword}%"
+
+    contracts =
+      from cs in ContractSnippet,
+        group_by: cs.snippet_id,
+        select: %{snippet_id: cs.snippet_id, count: count(cs.id)}
+    
+    query = 
+      from s in __MODULE__,
+        left_join: cs in subquery(contracts),
+        on: cs.snippet_id == s.id,
+        where: s.network_id == ^network_id and ilike(s.code, ^search_term),
+        order_by: [desc: coalesce(cs.count, 0)],
+        offset: ^offset,
+        limit: ^limit,
+        select: %{
+          code_hash: s.code_hash,
+          code: s.code,
+          type: s.type,
+          contracts_count: coalesce(cs.count, 0)
+        }
+
+    query =
+      case types do
+        [:all] -> query
+        types -> from s in query, where: s.type in ^types
+      end
+    
+    query |> Repo.all()
   end
 
   def get_resources(code) when is_binary(code) do
