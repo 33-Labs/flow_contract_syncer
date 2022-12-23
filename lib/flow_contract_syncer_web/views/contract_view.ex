@@ -64,6 +64,16 @@ defmodule FlowContractSyncerWeb.ContractView do
     }
   end
 
+  def render("snippets.json", %{snippets: snippets}) do
+    %{
+      code: 0,
+      data: 
+        render_many(snippets, FlowContractSyncerWeb.SnippetView, "snippet.json",
+          as: :snippet
+        )
+    }
+  end
+
   def render("error.json", %{code: code, message: message}) do
     %{
       code: code,

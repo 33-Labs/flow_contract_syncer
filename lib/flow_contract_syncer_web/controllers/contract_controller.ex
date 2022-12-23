@@ -150,9 +150,14 @@ defmodule FlowContractSyncerWeb.ContractController do
 
       contracts =
         case order_by do
-          "inserted_at" -> Contract.order_by(:inserted_at, network, owner, direction, offset, limit)
-          "dependants_count" -> Contract.order_by(:dependants_count, network, owner, direction, offset, limit)
-          "dependencies_count" -> Contract.order_by(:dependencies_count, network, owner, direction, offset, limit)
+          "inserted_at" ->
+            Contract.order_by(:inserted_at, network, owner, direction, offset, limit)
+
+          "dependants_count" ->
+            Contract.order_by(:dependants_count, network, owner, direction, offset, limit)
+
+          "dependencies_count" ->
+            Contract.order_by(:dependencies_count, network, owner, direction, offset, limit)
         end
 
       render(conn, :index, contracts: contracts)
@@ -164,10 +169,56 @@ defmodule FlowContractSyncerWeb.ContractController do
     end
   end
 
+  def snippets_params_schema,
+    do: %{
+      uuid: [type: :string, required: true, cast_func: &uuid_cast_func/1],
+      type: [
+        type: :string,
+        in: [
+          "resource",
+          "struct",
+          "interface",
+          "function",
+          "enum",
+          "event",
+          "all"
+        ],
+        default: "all"
+      ],
+      network: [type: :string, in: ["mainnet"], default: "mainnet"]
+    }
+
+  def snippets(conn, params) do
+    with {:ok,
+          %{
+            network: network,
+            uuid: uuid,
+            type: type
+          }} <- Tarams.cast(params, snippets_params_schema()) do
+      network = Repo.get_by(Network, name: network)
+      contract = Repo.get_by(Contract, uuid: uuid, network_id: network.id)
+
+      types = case type do
+        "interface" -> [:resource_interface, :struct_interface]
+        otherwise -> [String.to_atom(otherwise)]
+      end
+
+      snippets =
+        Contract.snippets(contract, types)
+
+      render(conn, snippets: snippets)
+    else
+      {:error, errors} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(:error, code: 104, message: Utils.format_errors(errors))
+    end
+  end
+
   def dependencies_params_schema,
     do: %{
       uuid: [type: :string, required: true, cast_func: &uuid_cast_func/1],
-      order_by: [ type: :string, in: ["address", "name"], default: "address"],
+      order_by: [type: :string, in: ["address", "name"], default: "address"],
       order_by_direction: [type: :string, in: ["desc", "asc"], default: "desc"],
       offset: [type: :integer, number: [min: 0], default: 0],
       limit: [type: :integer, number: [min: 1, max: 500], default: 200],
@@ -188,9 +239,11 @@ defmodule FlowContractSyncerWeb.ContractController do
       contract = Repo.get_by(Contract, uuid: uuid, network_id: network.id)
 
       dependencies_count = Contract.dependencies_count(contract)
-      dependencies = Contract.dependencies(contract, String.to_atom(order_by), direction, offset, limit)
 
-      render(conn, :dependencies, 
+      dependencies =
+        Contract.dependencies(contract, String.to_atom(order_by), direction, offset, limit)
+
+      render(conn, :dependencies,
         uuid: contract.uuid,
         dependencies: dependencies,
         dependencies_count: dependencies_count
@@ -204,43 +257,45 @@ defmodule FlowContractSyncerWeb.ContractController do
   end
 
   def dependants_params_schema,
-  do: %{
-    uuid: [type: :string, required: true, cast_func: &uuid_cast_func/1],
-    order_by: [ type: :string, in: ["address", "name"], default: "address"],
-    order_by_direction: [type: :string, in: ["desc", "asc"], default: "desc"],
-    offset: [type: :integer, number: [min: 0], default: 0],
-    limit: [type: :integer, number: [min: 1, max: 500], default: 200],
-    network: [type: :string, in: ["mainnet"], default: "mainnet"]
-  }
+    do: %{
+      uuid: [type: :string, required: true, cast_func: &uuid_cast_func/1],
+      order_by: [type: :string, in: ["address", "name"], default: "address"],
+      order_by_direction: [type: :string, in: ["desc", "asc"], default: "desc"],
+      offset: [type: :integer, number: [min: 0], default: 0],
+      limit: [type: :integer, number: [min: 1, max: 500], default: 200],
+      network: [type: :string, in: ["mainnet"], default: "mainnet"]
+    }
 
-def dependants(conn, params) do
-  with {:ok,
-        %{
-          network: network,
-          uuid: uuid,
-          order_by: order_by,
-          order_by_direction: direction,
-          offset: offset,
-          limit: limit
-        }} <- Tarams.cast(params, dependants_params_schema()) do
-    network = Repo.get_by(Network, name: network)
-    contract = Repo.get_by(Contract, uuid: uuid, network_id: network.id)
+  def dependants(conn, params) do
+    with {:ok,
+          %{
+            network: network,
+            uuid: uuid,
+            order_by: order_by,
+            order_by_direction: direction,
+            offset: offset,
+            limit: limit
+          }} <- Tarams.cast(params, dependants_params_schema()) do
+      network = Repo.get_by(Network, name: network)
+      contract = Repo.get_by(Contract, uuid: uuid, network_id: network.id)
 
-    dependants_count = Contract.dependants_count(contract)
-    dependants = Contract.dependants(contract, String.to_atom(order_by), direction, offset, limit)
+      dependants_count = Contract.dependants_count(contract)
 
-    render(conn, :dependants, 
-      uuid: contract.uuid,
-      dependants: dependants,
-      dependants_count: dependants_count
-    )
-  else
-    {:error, errors} ->
-      conn
-      |> put_status(:unprocessable_entity)
-      |> render(:error, code: 104, message: Utils.format_errors(errors))
+      dependants =
+        Contract.dependants(contract, String.to_atom(order_by), direction, offset, limit)
+
+      render(conn, :dependants,
+        uuid: contract.uuid,
+        dependants: dependants,
+        dependants_count: dependants_count
+      )
+    else
+      {:error, errors} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(:error, code: 104, message: Utils.format_errors(errors))
+    end
   end
-end
 
   defp uuid_cast_func(value) do
     if Utils.is_valid_uuid(value) do

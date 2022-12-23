@@ -71,8 +71,8 @@ defmodule FlowContractSyncer.Schema.Contract do
     |> unique_constraint([:network_id, :uuid], name: :contracts_network_id_uuid_index)
   end
 
-  def dependencies(%__MODULE__{id: contract_id}, order_by, direction, offset, limit) 
-    when is_integer(offset) and is_integer(limit) and order_by in [:name, :address] do
+  def dependencies(%__MODULE__{id: contract_id}, order_by, direction, offset, limit)
+      when is_integer(offset) and is_integer(limit) and order_by in [:name, :address] do
     direction = String.to_atom(direction)
     order = [{direction, order_by}]
 
@@ -87,8 +87,8 @@ defmodule FlowContractSyncer.Schema.Contract do
     |> Enum.map(& &1.uuid)
   end
 
-  def dependants(%__MODULE__{id: contract_id}, order_by, direction, offset, limit) 
-    when is_integer(offset) and is_integer(limit) and order_by in [:name, :address] do
+  def dependants(%__MODULE__{id: contract_id}, order_by, direction, offset, limit)
+      when is_integer(offset) and is_integer(limit) and order_by in [:name, :address] do
     direction = String.to_atom(direction)
     order = [{direction, order_by}]
 
@@ -101,7 +101,21 @@ defmodule FlowContractSyncer.Schema.Contract do
     |> select([:uuid])
     |> Repo.all()
     |> Enum.map(& &1.uuid)
-end
+  end
+
+  def snippets(%__MODULE__{id: contract_id}, types) do
+    query =
+      Snippet
+      |> join(:inner, [s], cs in ContractSnippet, on: cs.contract_id == ^contract_id and cs.snippet_id == s.id)
+      |> order_by(asc: :inserted_at)
+
+    query = case types do
+      [:all] -> query
+      types -> query |> where([s, _cs], s.type in ^types)
+    end
+
+    query |> Repo.all()
+  end
 
   def remove_dependencies!(%__MODULE__{id: contract_id} = contract) do
     {:ok, _} =
@@ -134,16 +148,20 @@ end
   end
 
   def total_amount(%Network{id: network_id}) do
-    Repo.one(from c in __MODULE__, where: c.network_id == ^network_id and c.status == :normal, select: count("*"))
+    Repo.one(
+      from c in __MODULE__,
+        where: c.network_id == ^network_id and c.status == :normal,
+        select: count("*")
+    )
   end
 
   def dependants_count(%__MODULE__{} = contract) do
-    (from d in Dependency, where: d.dependency_id == ^contract.id, select: count(d.id)) 
+    from(d in Dependency, where: d.dependency_id == ^contract.id, select: count(d.id))
     |> Repo.one()
   end
-    
+
   def dependencies_count(%__MODULE__{} = contract) do
-    (from d in Dependency, where: d.contract_id == ^contract.id, select: count(d.id))
+    from(d in Dependency, where: d.contract_id == ^contract.id, select: count(d.id))
     |> Repo.one()
   end
 
@@ -166,11 +184,14 @@ end
     )
   end
 
-  def search(%Network{id: network_id}, keyword, scope, offset, limit) 
-    when is_binary(keyword) and scope in [
-      "uuid", "code", "uuid,code", "code,uuid"
-    ] and is_integer(offset) and is_integer(limit) do
-
+  def search(%Network{id: network_id}, keyword, scope, offset, limit)
+      when is_binary(keyword) and
+             scope in [
+               "uuid",
+               "code",
+               "uuid,code",
+               "code,uuid"
+             ] and is_integer(offset) and is_integer(limit) do
     dependants = group_by_dependants()
     dependencies = group_by_dependencies()
 
@@ -265,7 +286,7 @@ end
   end
 
   def order_by(:dependencies_count, %Network{id: network_id}, owner, direction, offset, limit)
-  when is_integer(offset) and is_integer(limit) and direction in ["asc", "desc"] do
+      when is_integer(offset) and is_integer(limit) and direction in ["asc", "desc"] do
     direction =
       case direction do
         "asc" -> :asc_nulls_first
@@ -294,7 +315,7 @@ end
     query |> filter_by_owner(owner) |> Repo.all()
   end
 
-  def get_snippets(%__MODULE__{code: contract_code}) do
+  def extract_snippets(%__MODULE__{code: contract_code}) do
     import Snippet,
       only: [
         get_resources: 1,

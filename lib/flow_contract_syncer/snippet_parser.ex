@@ -26,7 +26,7 @@ defmodule FlowContractSyncer.SnippetParser do
 
     Contract.snippet_unparsed(network, chunk_size)
     |> Enum.each(fn contract ->
-      snippets = Contract.get_snippets(contract)
+      snippets = Contract.extract_snippets(contract)
 
       case insert_snippets_to_db(contract, snippets) do
         {:ok, _} ->

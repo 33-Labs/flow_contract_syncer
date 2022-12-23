@@ -4,7 +4,7 @@ defmodule FlowContractSyncer.ContractSyncerTest do
   import Mox
 
   alias FlowContractSyncer.Schema.{
-    Contract, 
+    Contract,
     ContractEvent,
     ContractSnippet,
     Dependency,
@@ -39,10 +39,11 @@ defmodule FlowContractSyncer.ContractSyncerTest do
       {:ok, updated_encoded_code()}
     end)
 
-    config = %{ network.config | 
-      "contract_sync_chunk_size" => 1,
-      "deps_parse_interval" => 100,
-      "snippets_parse_interval" => 100
+    config = %{
+      network.config
+      | "contract_sync_chunk_size" => 1,
+        "deps_parse_interval" => 100,
+        "snippets_parse_interval" => 100
     }
 
     network = network |> Network.changeset(%{config: config}) |> Repo.update!()
@@ -56,7 +57,7 @@ defmodule FlowContractSyncer.ContractSyncerTest do
     # == contract syncer ==
 
     contracts = Contract |> Repo.all()
-    contract = contracts |> Enum.find(& &1.id != dep.id)
+    contract = contracts |> Enum.find(&(&1.id != dep.id))
     assert contract.status == :normal
     assert contract.code == raw_code()
     assert contract.deps_parsed == true
@@ -77,7 +78,7 @@ defmodule FlowContractSyncer.ContractSyncerTest do
     [contract_snippet] = ContractSnippet |> Repo.all()
     assert contract_snippet.contract_id == contract.id
     assert contract_snippet.snippet_id == snippet.id
-    
+
     snippet_get = snippet.code |> String.replace([" ", "\n"], "")
     snippet_want = raw_snippet() |> String.replace([" ", "\n"], "")
     assert snippet_get == snippet_want
@@ -105,15 +106,15 @@ defmodule FlowContractSyncer.ContractSyncerTest do
     # delete contract_snippet rather than snippet
     snippets = Snippet |> Repo.all()
     assert Enum.count(snippets) == 2
-    snippet_2 = snippets |> Enum.find(& &1.id != snippet.id)
+    snippet_2 = snippets |> Enum.find(&(&1.id != snippet.id))
 
     [contract_snippet_2] = ContractSnippet |> Repo.all()
     assert contract_snippet.contract_id == contract.id
     assert contract_snippet_2.snippet_id == snippet_2.id
-    
+
     snippet_get_2 = snippet_2.code |> String.replace([" ", "\n"], "")
     snippet_want_2 = raw_updated_snippet() |> String.replace([" ", "\n"], "")
-    assert snippet_get_2 == snippet_want_2 
+    assert snippet_get_2 == snippet_want_2
 
     # == round 3 ==
 
@@ -147,17 +148,18 @@ defmodule FlowContractSyncer.ContractSyncerTest do
   defp create_dep_contract(context) do
     network = context[:network]
 
-    contract = %Contract{
-      network_id: network.id,
-      uuid: "A.33ec8cce566c4ca7.Dep",
-      address: "0x33ec8cce566c4ca7",
-      name: "Dep",
-      status: :normal,
-      code: "Nothing here",
-      deps_parsed: true,
-      snippet_parsed: true
-    }
-    |> Repo.insert!()
+    contract =
+      %Contract{
+        network_id: network.id,
+        uuid: "A.33ec8cce566c4ca7.Dep",
+        address: "0x33ec8cce566c4ca7",
+        name: "Dep",
+        status: :normal,
+        code: "Nothing here",
+        deps_parsed: true,
+        snippet_parsed: true
+      }
+      |> Repo.insert!()
 
     [dep: contract]
   end
@@ -217,7 +219,7 @@ defmodule FlowContractSyncer.ContractSyncerTest do
     pub fun createEmptyResource(): @EmptyResource {
       return <- create EmptyResource()
     }
-    """ 
+    """
   end
 
   defp raw_updated_snippet do
@@ -225,7 +227,7 @@ defmodule FlowContractSyncer.ContractSyncerTest do
     pub fun createEmptyResource(param: UInt64): @EmptyResource {
       return <- create EmptyResource()
     }
-    """ 
+    """
   end
 
   defp raw_code do
@@ -265,5 +267,4 @@ defmodule FlowContractSyncer.ContractSyncerTest do
   defp updated_encoded_code do
     ~S(eyJ0eXBlIjoiT3B0aW9uYWwiLCJ2YWx1ZSI6eyJ0eXBlIjoiQXJyYXkiLCJ2YWx1ZSI6W3sidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMTIifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMTE3In0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6Ijk4In0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjMyIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6Ijk5In0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjExMSJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMTAifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMTE2In0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjExNCJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiI5NyJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiI5OSJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMTYifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMzIifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiODIifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMTAxIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjEwMyJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMDEifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMTIwIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6Ijg0In0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjEwMSJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMTUifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMTE2In0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjEwMSJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMTQifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMzIifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMTIzIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjEwIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjMyIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjMyIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjQ3In0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjQ3In0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjMyIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjEwMiJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMTcifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMTEwIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6Ijk5In0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjExNiJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMDUifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMTExIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjExMCJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMTUifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMTAifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMzIifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMzIifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMTEyIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjExNyJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiI5OCJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIzMiJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMDIifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMTE3In0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjExMCJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIzMiJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiI5OSJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMTQifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMTAxIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6Ijk3In0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjExNiJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMDEifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiNjkifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMTA5In0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjExMiJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMTYifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMTIxIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjgyIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjEwMSJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMTUifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMTExIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjExNyJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMTQifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiOTkifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMTAxIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjQwIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjExMiJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiI5NyJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMTQifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiOTcifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMTA5In0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjU4In0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjMyIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6Ijg1In0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjczIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjExMCJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMTYifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiNTQifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiNTIifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiNDEifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiNTgifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMzIifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiNjQifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiNjkifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMTA5In0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjExMiJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMTYifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMTIxIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjgyIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjEwMSJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMTUifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMTExIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjExNyJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMTQifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiOTkifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMTAxIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjMyIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjEyMyJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMCJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIzMiJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIzMiJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIzMiJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIzMiJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIzMiJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIzMiJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMTQifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMTAxIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjExNiJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMTcifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMTE0In0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjExMCJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIzMiJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiI2MCJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiI0NSJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIzMiJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiI5OSJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMTQifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMTAxIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6Ijk3In0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjExNiJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMDEifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMzIifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiNjkifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMTA5In0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjExMiJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMTYifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMTIxIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjgyIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjEwMSJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMTUifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMTExIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjExNyJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMTQifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiOTkifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMTAxIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjQwIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjQxIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjEwIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjMyIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjMyIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjEyNSJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMCJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMCJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIzMiJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIzMiJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMDUifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMTEwIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjEwNSJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMTYifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiNDAifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiNDEifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMzIifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMTIzIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjEwIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjMyIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjMyIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjEyNSJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMCJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMjUifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMTAifV19fQ==)
   end
-
 end
