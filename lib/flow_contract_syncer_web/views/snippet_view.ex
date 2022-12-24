@@ -33,7 +33,7 @@ defmodule FlowContractSyncerWeb.SnippetView do
         render_many(contracts, FlowContractSyncerWeb.PartialContractView, "partial_contract.json",
           as: :partial_contract
         )
-    } 
+    }
   end
 
   def render("error.json", %{code: code, message: message}) do

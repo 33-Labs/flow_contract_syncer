@@ -73,6 +73,22 @@ defmodule FlowContractSyncerWeb.ContractView do
     }
   end
 
+  def render("events.json", %{events: events}) do
+    %{
+      code: 0,
+      data: render_many(events, __MODULE__, "event.json", as: :event)
+    }
+  end
+
+  def render("event.json", %{event: event}) do
+    %{
+      tx_id: event.tx_id,
+      block_height: event.block_height,
+      block_timestamp: event.block_timestamp,
+      type: event.type
+    }
+  end
+
   def render("error.json", %{code: code, message: message}) do
     %{
       code: code,

@@ -5,7 +5,7 @@ defmodule FlowContractSyncer.Schema.Contract do
   import Ecto.{Changeset, Query}
 
   alias FlowContractSyncer.{Repo, Utils}
-  alias FlowContractSyncer.Schema.{ContractSnippet, Dependency, Network, Snippet}
+  alias FlowContractSyncer.Schema.{ContractEvent, ContractSnippet, Dependency, Network, Snippet}
 
   schema "contracts" do
     belongs_to :network, Network
@@ -69,6 +69,22 @@ defmodule FlowContractSyncer.Schema.Contract do
     |> validate_required(@required_fields)
     |> validate_length(:address, is: 18)
     |> unique_constraint([:network_id, :uuid], name: :contracts_network_id_uuid_index)
+  end
+
+  def events(%__MODULE__{network_id: network_id, address: address, name: name}) do
+    ContractEvent
+    |> where(network_id: ^network_id, address: ^address, contract_name: ^name)
+    |> order_by(asc: :block_height, asc: :tx_index, asc: :index)
+    |> select([:tx_id, :block_height, :type, :block_timestamp])
+    |> Repo.all()
+    |> Enum.map(fn data ->
+      %{
+        tx_id: data.tx_id,
+        block_height: data.block_height,
+        block_timestamp: data.block_timestamp,
+        type: data.type
+      }
+    end)
   end
 
   def dependencies(%__MODULE__{id: contract_id}, order_by, direction, offset, limit)

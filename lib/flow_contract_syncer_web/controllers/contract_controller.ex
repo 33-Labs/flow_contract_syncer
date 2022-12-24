@@ -198,15 +198,40 @@ defmodule FlowContractSyncerWeb.ContractController do
       network = Repo.get_by(Network, name: network)
       contract = Repo.get_by(Contract, uuid: uuid, network_id: network.id)
 
-      types = case type do
-        "interface" -> [:resource_interface, :struct_interface]
-        otherwise -> [String.to_atom(otherwise)]
-      end
+      types =
+        case type do
+          "interface" -> [:resource_interface, :struct_interface]
+          otherwise -> [String.to_atom(otherwise)]
+        end
 
-      snippets =
-        Contract.snippets(contract, types)
+      snippets = Contract.snippets(contract, types)
 
       render(conn, snippets: snippets)
+    else
+      {:error, errors} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(:error, code: 104, message: Utils.format_errors(errors))
+    end
+  end
+
+  def events_params_schema,
+    do: %{
+      uuid: [type: :string, required: true, cast_func: &uuid_cast_func/1],
+      network: [type: :string, in: ["mainnet"], default: "mainnet"]
+    }
+
+  def events(conn, params) do
+    with {:ok,
+          %{
+            network: network,
+            uuid: uuid
+          }} <- Tarams.cast(params, events_params_schema()) do
+      network = Repo.get_by(Network, name: network)
+      contract = Repo.get_by(Contract, uuid: uuid, network_id: network.id)
+      events = Contract.events(contract)
+
+      render(conn, events: events)
     else
       {:error, errors} ->
         conn

@@ -26,6 +26,7 @@ defmodule FlowContractSyncer.Repo.Migrations.CreateTables do
       # used as uuid
       add :digest, :string, null: false
       add :block_height, :bigint, null: false
+      add :block_timestamp, :naive_datetime_usec, null: false
       add :tx_id, :string, null: false
       add :tx_index, :integer, null: false
 
@@ -50,6 +51,7 @@ defmodule FlowContractSyncer.Repo.Migrations.CreateTables do
 
     create index("contract_events", [:network_id, :address, :contract_name])
     create index("contract_events", [:network_id, :processed])
+    create index("contract_events", [:network_id, :block_height])
 
     create table("contracts") do
       add :network_id, :bigint, null: false

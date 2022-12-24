@@ -17,7 +17,10 @@ defmodule FlowContractSyncerWeb.SnippetController do
     security([%{Bearer: []}])
 
     parameters do
-      code_hash(:path, :string, "Snippet code hash", required: true, example: "ltBsYqD8m0S/EEDaBv4jwRlO4jpGOqEWQ6SRWwzsxTA=")
+      code_hash(:path, :string, "Snippet code hash",
+        required: true,
+        example: "ltBsYqD8m0S/EEDaBv4jwRlO4jpGOqEWQ6SRWwzsxTA="
+      )
 
       network(:query, :string, "Flow network, default value is \"mainnet\"",
         required: false,
@@ -33,21 +36,21 @@ defmodule FlowContractSyncerWeb.SnippetController do
   defp show_params_schema,
     do: %{
       code_hash: [type: :string, required: true, cast_func: &code_hash_cast_func/1],
-      network: [type: :string, in: ["mainnet"], default: "mainnet"],
+      network: [type: :string, in: ["mainnet"], default: "mainnet"]
     }
 
   def show(conn, params) do
     with {:ok,
           %{
             network: network,
-            code_hash: code_hash,
+            code_hash: code_hash
           }} <- Tarams.cast(params, show_params_schema()) do
       network = Repo.get_by(Network, name: network)
 
       Snippet
       |> Repo.get_by(network_id: network.id, code_hash: code_hash)
       |> case do
-        %Snippet{} = snippet -> 
+        %Snippet{} = snippet ->
           contracts_count = Snippet.contracts_count(snippet)
           render(conn, :show, snippet: Map.put(snippet, :contracts_count, contracts_count))
 
@@ -65,42 +68,42 @@ defmodule FlowContractSyncerWeb.SnippetController do
   end
 
   defp contracts_params_schema,
-  do: %{
-    code_hash: [type: :string, required: true, cast_func: &code_hash_cast_func/1],
-    network: [type: :string, in: ["mainnet"], default: "mainnet"],
-    offset: [type: :integer, number: [min: 0], default: 0],
-    limit: [type: :integer, number: [min: 1, max: 500], default: 200]
-  }
+    do: %{
+      code_hash: [type: :string, required: true, cast_func: &code_hash_cast_func/1],
+      network: [type: :string, in: ["mainnet"], default: "mainnet"],
+      offset: [type: :integer, number: [min: 0], default: 0],
+      limit: [type: :integer, number: [min: 1, max: 500], default: 200]
+    }
 
-def contracts(conn, params) do
-  with {:ok,
-        %{
-          network: network,
-          code_hash: code_hash,
-          offset: offset,
-          limit: limit
-        }} <- Tarams.cast(params, contracts_params_schema()) do
-    network = Repo.get_by(Network, name: network)
+  def contracts(conn, params) do
+    with {:ok,
+          %{
+            network: network,
+            code_hash: code_hash,
+            offset: offset,
+            limit: limit
+          }} <- Tarams.cast(params, contracts_params_schema()) do
+      network = Repo.get_by(Network, name: network)
 
-    Snippet
-    |> Repo.get_by(network_id: network.id, code_hash: code_hash)
-    |> case do
-      %Snippet{} = snippet -> 
-        contracts = Contract.use_snippet(snippet, offset, limit)
-        render(conn, :contracts, contracts: contracts)
+      Snippet
+      |> Repo.get_by(network_id: network.id, code_hash: code_hash)
+      |> case do
+        %Snippet{} = snippet ->
+          contracts = Contract.use_snippet(snippet, offset, limit)
+          render(conn, :contracts, contracts: contracts)
 
-      _otherwise ->
+        _otherwise ->
+          conn
+          |> put_status(:not_found)
+          |> render(:error, code: 102, message: "snippet not found")
+      end
+    else
+      {:error, errors} ->
         conn
-        |> put_status(:not_found)
-        |> render(:error, code: 102, message: "snippet not found")
+        |> put_status(:unprocessable_entity)
+        |> render(:error, code: 104, message: Utils.format_errors(errors))
     end
-  else
-    {:error, errors} ->
-      conn
-      |> put_status(:unprocessable_entity)
-      |> render(:error, code: 104, message: Utils.format_errors(errors))
   end
-end
 
   defp code_hash_cast_func(value) do
     case Base.decode64(value) do
