@@ -335,6 +335,64 @@
         ]
       }
     },
+    "/api/v1/snippets": {
+      "get": {
+        "description": "",
+        "operationId": "query_snippet",
+        "parameters": [
+          {
+            "description": "Snippet code hash",
+            "in": "path",
+            "name": "code_hash",
+            "required": true,
+            "type": "string",
+            "x-example": "ltBsYqD8m0S/EEDaBv4jwRlO4jpGOqEWQ6SRWwzsxTA="
+          },
+          {
+            "description": "Flow network, default value is \"mainnet\"",
+            "enum": [
+              "mainnet"
+            ],
+            "in": "query",
+            "name": "network",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ContractResp"
+            }
+          },
+          "404": {
+            "description": "Contract not found",
+            "schema": {
+              "$ref": "#/definitions/ErrorResp"
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "schema": {
+              "$ref": "#/definitions/ErrorResp"
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Query for specific snippet",
+        "tags": [
+          "Snippets"
+        ]
+      }
+    },
     "/api/v1/snippets/search": {
       "get": {
         "description": "",

@@ -12,8 +12,7 @@ defmodule FlowContractSyncer.Utils do
   end
 
   def calc_code_hash(code) when is_binary(code) do
-    :crypto.hash(:sha256, String.trim(code))
-    |> Base.encode64()
+    :crypto.hash(:sha256, String.trim(code)) |> Base.encode16()
   end
 
   def is_valid_uuid(uuid) do

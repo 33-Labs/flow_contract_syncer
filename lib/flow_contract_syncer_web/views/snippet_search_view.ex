@@ -7,10 +7,7 @@ defmodule FlowContractSyncerWeb.SnippetSearchView do
       when is_list(snippets) do
     %{
       code: 0,
-      data:
-        render_many(snippets, FlowContractSyncerWeb.SnippetView, "snippet.json",
-          as: :snippet
-        )
+      data: render_many(snippets, FlowContractSyncerWeb.SnippetView, "snippet.json", as: :snippet)
     }
   end
 

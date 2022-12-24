@@ -68,14 +68,20 @@ defmodule FlowContractSyncer.Schema.Snippet do
     |> Repo.update()
   end
 
-  def search(%Network{id: network_id}, keyword, type, offset, limit)
-    when is_binary(keyword) and type in ["resource", "struct", "interface", "function", "enum", "event", "all"] and 
-    is_integer(offset) and is_integer(limit) do
+  def contracts_count(%__MODULE__{id: snippet_id}) do
+    from(cs in ContractSnippet, where: cs.snippet_id == ^snippet_id, select: count(cs.id))
+    |> Repo.one()
+  end
 
-    types = case type do
-      "interface" -> [:resource_interface, :struct_interface]
-      otherwise -> [String.to_atom(otherwise)]
-    end
+  @valid_types ["resource", "struct", "interface", "function", "enum", "event", "all"]
+  def search(%Network{id: network_id}, keyword, type, offset, limit)
+      when is_binary(keyword) and type in @valid_types and
+             is_integer(offset) and is_integer(limit) do
+    types =
+      case type do
+        "interface" -> [:resource_interface, :struct_interface]
+        otherwise -> [String.to_atom(otherwise)]
+      end
 
     search_term = "%#{keyword}%"
 
@@ -83,8 +89,8 @@ defmodule FlowContractSyncer.Schema.Snippet do
       from cs in ContractSnippet,
         group_by: cs.snippet_id,
         select: %{snippet_id: cs.snippet_id, count: count(cs.id)}
-    
-    query = 
+
+    query =
       from s in __MODULE__,
         left_join: cs in subquery(contracts),
         on: cs.snippet_id == s.id,
@@ -104,7 +110,7 @@ defmodule FlowContractSyncer.Schema.Snippet do
         [:all] -> query
         types -> from s in query, where: s.type in ^types
       end
-    
+
     query |> Repo.all()
   end
 

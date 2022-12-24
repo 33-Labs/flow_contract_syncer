@@ -32,13 +32,12 @@ defmodule FlowContractSyncerWeb.Router do
     get("/contracts/:uuid", ContractController, :show)
     get("/contracts/:uuid/dependencies", ContractController, :dependencies)
     get("/contracts/:uuid/dependants", ContractController, :dependants)
+    get("/contracts/:uuid/snippets", ContractController, :snippets)
     # get("/contracts/:uuid/history", ContractController, :history)
 
-    get("/contracts/:uuid/snippets", ContractController, :snippets)
-
     get("/snippets/search", SnippetSearchController, :search)
-    # get("/snippets/:code_hash", SnippetController, :show)
-    # get("/snippets/:code_hash/contracts", SnippetController, :contracts)
+    get("/snippets/:code_hash", SnippetController, :show)
+    get("/snippets/:code_hash/contracts", SnippetController, :contracts)
   end
 
   scope "/api/v1/swagger" do

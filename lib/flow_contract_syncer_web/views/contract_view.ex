@@ -35,42 +35,41 @@ defmodule FlowContractSyncerWeb.ContractView do
   end
 
   def render("dependencies.json", %{
-    uuid: uuid,
-    dependencies: dependencies, 
-    dependencies_count: count
-  }) when is_binary(uuid) and is_list(dependencies) and is_integer(count) do
+        uuid: uuid,
+        dependencies: dependencies,
+        dependencies_count: count
+      })
+      when is_binary(uuid) and is_list(dependencies) and is_integer(count) do
     %{
       code: 0,
       data: %{
         uuid: uuid,
-        dependencies: dependencies, 
+        dependencies: dependencies,
         total_dependants_count: count
-      } 
+      }
     }
   end
 
   def render("dependants.json", %{
-    uuid: uuid,
-    dependants: dependants, 
-    dependants_count: count
-  }) when is_binary(uuid) and is_list(dependants) and is_integer(count) do
+        uuid: uuid,
+        dependants: dependants,
+        dependants_count: count
+      })
+      when is_binary(uuid) and is_list(dependants) and is_integer(count) do
     %{
       code: 0,
       data: %{
         uuid: uuid,
-        dependants: dependants, 
+        dependants: dependants,
         total_dependants_count: count
-      } 
+      }
     }
   end
 
   def render("snippets.json", %{snippets: snippets}) do
     %{
       code: 0,
-      data: 
-        render_many(snippets, FlowContractSyncerWeb.SnippetView, "snippet.json",
-          as: :snippet
-        )
+      data: render_many(snippets, FlowContractSyncerWeb.SnippetView, "snippet.json", as: :snippet)
     }
   end
 

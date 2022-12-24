@@ -104,15 +104,30 @@ defmodule FlowContractSyncer.Schema.Contract do
   end
 
   def snippets(%__MODULE__{id: contract_id}, types) do
-    query =
-      Snippet
-      |> join(:inner, [s], cs in ContractSnippet, on: cs.contract_id == ^contract_id and cs.snippet_id == s.id)
-      |> order_by(asc: :inserted_at)
+    contracts =
+      from cs in ContractSnippet,
+        group_by: cs.snippet_id,
+        select: %{snippet_id: cs.snippet_id, count: count(cs.id)}
 
-    query = case types do
-      [:all] -> query
-      types -> query |> where([s, _cs], s.type in ^types)
-    end
+    query =
+      from s in Snippet,
+        left_join: cs in subquery(contracts),
+        on: cs.snippet_id == s.id,
+        join: ccs in ContractSnippet,
+        on: ccs.contract_id == ^contract_id and ccs.snippet_id == cs.snippet_id,
+        order_by: [desc: coalesce(cs.count, 0)],
+        select: %{
+          code_hash: s.code_hash,
+          code: s.code,
+          type: s.type,
+          contracts_count: coalesce(cs.count, 0)
+        }
+
+    query =
+      case types do
+        [:all] -> query
+        types -> query |> where([s, _cs], s.type in ^types)
+      end
 
     query |> Repo.all()
   end
@@ -163,6 +178,30 @@ defmodule FlowContractSyncer.Schema.Contract do
   def dependencies_count(%__MODULE__{} = contract) do
     from(d in Dependency, where: d.contract_id == ^contract.id, select: count(d.id))
     |> Repo.one()
+  end
+
+  def use_snippet(%Snippet{id: snippet_id}, offset, limit) do
+    dependants = group_by_dependants()
+    dependencies = group_by_dependencies()
+
+    query =
+      from c in __MODULE__,
+        left_join: d in subquery(dependants),
+        on: d.dependency_id == c.id,
+        left_join: dd in subquery(dependencies),
+        on: dd.contract_id == c.id,
+        join: cs in ContractSnippet,
+        on: c.id == cs.contract_id and cs.snippet_id == ^snippet_id,
+        order_by: [desc: coalesce(d.count, 0)],
+        offset: ^offset,
+        limit: ^limit,
+        select: %{
+          uuid: c.uuid,
+          dependants_count: coalesce(d.count, 0),
+          dependencies_count: coalesce(dd.count, 0)
+        }
+
+    Repo.all(query)
   end
 
   def with_deps_uuids(%__MODULE__{} = contract) do
