@@ -17,7 +17,7 @@ defmodule FlowContractSyncerWeb.ContractSearchController do
     security([%{Bearer: []}])
 
     parameters do
-      keyword(:query, :string, "Keyword for searching, case-insensitive",
+      keyword(:query, :string, "Keyword for searching, case-sensitive",
         required: true,
         example: "topshot"
       )
