@@ -26,13 +26,7 @@ defmodule FlowContractSyncer.Application do
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: FlowContractSyncer.Supervisor]
-    ret = {:ok, _pid} = Supervisor.start_link(children, opts)
-
-    if env() == :prod do
-      start_enabled_networks()
-    end
-
-    ret
+    {:ok, _pid} = Supervisor.start_link(children, opts)
   end
 
   def start_enabled_networks do
