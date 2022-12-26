@@ -28,11 +28,11 @@ defmodule FlowContractSyncer.GlobalSetup do
     |> Repo.insert()
   end
 
-  def insert_contracts do
+  def insert_contracts(path) do
     mainnet = Repo.get_by(Network, name: "mainnet")
 
     changesets =
-      "priv/data/contracts.csv"
+      path
       |> File.stream!(read_ahead: 100_000)
       |> ContractParser.parse_stream()
       |> Stream.map(fn [location, code] ->
@@ -62,11 +62,11 @@ defmodule FlowContractSyncer.GlobalSetup do
     )
   end
 
-  def insert_events do
+  def insert_events(path) do
     mainnet = Repo.get_by(Network, name: "mainnet")
 
     changesets =
-      "priv/data/events.csv"
+      path
       |> File.stream!(read_ahead: 1)
       |> EventParser.parse_stream()
       |> Stream.filter(fn [_, _, block_height | _data] ->
