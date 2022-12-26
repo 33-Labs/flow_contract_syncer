@@ -8,7 +8,8 @@ defmodule FlowContractSyncer.ContractSyncerSupervisor do
   alias FlowContractSyncer.{
     ContractEventSyncer,
     ContractSyncer,
-    DependencyParser
+    DependencyParser,
+    SnippetParser
   }
 
   def start_link(network) do
@@ -20,7 +21,8 @@ defmodule FlowContractSyncer.ContractSyncerSupervisor do
     children = [
       {ContractEventSyncer, network},
       {ContractSyncer, network},
-      {DependencyParser, network}
+      {DependencyParser, network},
+      {SnippetParser, network}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)

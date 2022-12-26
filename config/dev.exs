@@ -8,7 +8,8 @@ config :flow_contract_syncer, FlowContractSyncer.Repo,
   database: "flow_contract_syncer_dev",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
-  pool_size: 10
+  pool_size: 10,
+  port: 5433
 
 # For development, we disable any cache and enable
 # debugging and code reloading.

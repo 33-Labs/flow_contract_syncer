@@ -2,7 +2,7 @@ defmodule FlowContractSyncer.Schema.NetworkState do
   @moduledoc false
 
   use Ecto.Schema
-  import Ecto.Changeset
+  import Ecto.{Changeset, Query}
 
   alias FlowContractSyncer.Repo
   alias FlowContractSyncer.Schema.Network
@@ -10,16 +10,44 @@ defmodule FlowContractSyncer.Schema.NetworkState do
   schema "network_states" do
     belongs_to :network, Network
     field :synced_height, :integer
+    field :contract_search_count, :integer
+    field :snippet_search_count, :integer
 
     timestamps()
   end
 
-  @required_fields ~w(network_id synced_height)a
+  @required_fields ~w(network_id synced_height contract_search_count snippet_search_count)a
   def changeset(state, params \\ %{}) do
     state
     |> cast(params, @required_fields)
     |> validate_required(@required_fields)
     |> unique_constraint([:network_id], name: :network_states_network_id_index)
+  end
+
+  def inc_contract_search_count(%__MODULE__{id: network_id}) do
+    Repo.transaction(fn ->
+      state =
+        __MODULE__
+        |> where(network_id: ^network_id)
+        |> Repo.one()
+
+      state
+      |> changeset(%{contract_search_count: state.contract_search_count + 1})
+      |> Repo.update!()
+    end)
+  end
+
+  def inc_snippet_search_count(%__MODULE__{id: network_id}) do
+    Repo.transaction(fn ->
+      state =
+        __MODULE__
+        |> where(network_id: ^network_id)
+        |> Repo.one()
+
+      state
+      |> changeset(%{snippet_search_count: state.snippet_search_count + 1})
+      |> Repo.update!()
+    end)
   end
 
   def get_by_network_id(network_id) do

@@ -18,6 +18,7 @@ defmodule FlowContractSyncer.Schema.ContractEvent do
 
     field :digest, :string
     field :block_height, :integer
+    field :block_timestamp, :naive_datetime_usec
     field :tx_id, :string
     field :tx_index, :integer
     field :type, Ecto.Enum, values: [added: 0, updated: 1, removed: 2]
@@ -30,7 +31,7 @@ defmodule FlowContractSyncer.Schema.ContractEvent do
     timestamps()
   end
 
-  @required_fields ~w(network_id digest block_height tx_id tx_index type index address code_hash contract_name processed)a
+  @required_fields ~w(network_id digest block_height block_timestamp tx_id tx_index type index address code_hash contract_name processed)a
   def changeset(event, params \\ %{}) do
     params =
       case Map.get(params, :address) do
@@ -56,7 +57,7 @@ defmodule FlowContractSyncer.Schema.ContractEvent do
   #     "event_index" => "1",
   #     "payload" => "eyJ0eXBlIjoiRXZlbnQiLCJ2YWx1ZSI6eyJpZCI6ImZsb3cuQWNjb3VudENvbnRyYWN0QWRkZWQiLCJmaWVsZHMiOlt7Im5hbWUiOiJhZGRyZXNzIiwidmFsdWUiOnsidHlwZSI6IkFkZHJlc3MiLCJ2YWx1ZSI6IjB4MjVlYzhjY2U1NjZjNGNhNyJ9fSx7Im5hbWUiOiJjb2RlSGFzaCIsInZhbHVlIjp7InR5cGUiOiJBcnJheSIsInZhbHVlIjpbeyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjEwMSJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjExOCJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxNzQifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMTA2In0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjIzOSJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiI4MyJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMzIifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMTgwIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjkwIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjkxIn0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjIzMSJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiI2NCJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIyNTIifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiODUifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMjI1In0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjIxOCJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiI2MyJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiI2NiJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIyMSJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiI2NCJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIyMzEifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMjEifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMTA3In0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjE2NSJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxMDQifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMjQ2In0seyJ0eXBlIjoiVUludDgiLCJ2YWx1ZSI6IjEwNCJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiI1OCJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiI0MSJ9LHsidHlwZSI6IlVJbnQ4IiwidmFsdWUiOiIxOTEifSx7InR5cGUiOiJVSW50OCIsInZhbHVlIjoiMTA2In1dfX0seyJuYW1lIjoiY29udHJhY3QiLCJ2YWx1ZSI6eyJ0eXBlIjoiU3RyaW5nIiwidmFsdWUiOiJMVVNEIn19XX19Cg=="
   # }
-  # and we add "block_height" in EventSyncer
+  # and we add "block_height" and "block_timestamp" in EventSyncer
   def new(
         %{
           "type" => type,
@@ -64,7 +65,8 @@ defmodule FlowContractSyncer.Schema.ContractEvent do
           "transaction_index" => raw_tx_index,
           "event_index" => raw_event_index,
           "payload" => payload,
-          "block_height" => block_height
+          "block_height" => block_height,
+          "block_timestamp" => block_timestamp
         } = event,
         %Network{id: network_id}
       )
@@ -85,6 +87,7 @@ defmodule FlowContractSyncer.Schema.ContractEvent do
         network_id: network_id,
         digest: calc_event_digest(event, block_height),
         block_height: block_height,
+        block_timestamp: block_timestamp,
         tx_id: tx_id,
         tx_index: String.to_integer(raw_tx_index),
         type: get_event_type(type),
@@ -125,7 +128,7 @@ defmodule FlowContractSyncer.Schema.ContractEvent do
     |> Map.put("block_height", block_height)
     |> Jason.encode!()
     |> (fn data -> :crypto.hash(:sha256, data) end).()
-    |> Base.encode64()
+    |> Base.encode16()
   end
 
   defp get_event_type(type) do
@@ -172,7 +175,7 @@ defmodule FlowContractSyncer.Schema.ContractEvent do
         %{"type" => "UInt8", "value" => value} -> String.to_integer(value)
       end)
       |> List.to_string()
-      |> Base.encode64()
+      |> Base.encode16()
 
     %{
       address: address,

@@ -8,14 +8,16 @@ defmodule FlowContractSyncer.ContractEventCase do
       |> Network.changeset(%{
         name: "test",
         endpoint: "https://rest-mainnet.onflow.org/v1",
-        min_sync_height: 0,
+        min_sync_height: 41_780_000,
         config: %{
           "contract_event_sync_interval" => 5000,
           "contract_event_sync_chunk_size" => 10,
           "contract_sync_interval" => 5000,
           "contract_sync_chunk_size" => 10,
           "deps_parse_interval" => 5000,
-          "deps_parse_chunk_size" => 10
+          "deps_parse_chunk_size" => 10,
+          "snippets_parse_interval" => 5000,
+          "snippets_parse_chunk_size" => 10
         }
       })
       |> Repo.insert!()

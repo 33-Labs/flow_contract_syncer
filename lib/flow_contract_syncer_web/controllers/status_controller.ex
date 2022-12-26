@@ -4,7 +4,7 @@ defmodule FlowContractSyncerWeb.StatusController do
 
   require Logger
 
-  alias FlowContractSyncer.Repo
+  alias FlowContractSyncer.{Repo, Utils}
   alias FlowContractSyncer.Schema.{Contract, Network, NetworkState}
 
   swagger_path :show do
@@ -27,29 +27,30 @@ defmodule FlowContractSyncerWeb.StatusController do
     response(422, "Unprocessable Entity", Schema.ref(:ErrorResp))
   end
 
-  def show(conn, %{"network" => "mainnet"}) do
-    network = Repo.get_by(Network, name: "mainnet")
-    network_state = NetworkState.get_by_network_id(network.id)
-    contract_amount = Contract.total_amount(network)
-
-    status = %{
-      network: network.name,
-      synced_height: network_state.synced_height,
-      last_sync_at: network_state.updated_at,
-      contract_amount: contract_amount
-    }
-
-    render(conn, :show, status: status)
-  end
-
-  def show(conn, %{"network" => _network}) do
-    conn
-    |> put_status(:unprocessable_entity)
-    |> render(:error, code: 100, message: "unsupported")
-  end
+  @show_params_schema %{
+    network: [type: :string, in: ["mainnet"], default: "mainnet"]
+  }
 
   def show(conn, params) do
-    show(conn, Map.put(params, "network", "mainnet"))
+    with {:ok, %{network: network}} <- Tarams.cast(params, @show_params_schema) do
+      network = Repo.get_by(Network, name: network)
+      network_state = NetworkState.get_by_network_id(network.id)
+      contract_amount = Contract.total_amount(network)
+
+      status = %{
+        network: network.name,
+        synced_height: network_state.synced_height,
+        last_sync_at: network_state.updated_at,
+        contract_amount: contract_amount
+      }
+
+      render(conn, :show, status: status)
+    else
+      {:error, errors} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> render(:error, code: 104, message: Utils.format_errors(errors))
+    end
   end
 
   def swagger_definitions do

@@ -3,26 +3,14 @@ defmodule FlowContractSyncerWeb.ContractSearchView do
 
   use FlowContractSyncerWeb, :view
 
-  alias FlowContractSyncer.Repo
-
   def render("contract_search.json", %{contracts: contracts})
       when is_list(contracts) do
-    contracts = contracts |> Repo.preload([:dependants, :dependencies])
-
     %{
       code: 0,
       data:
-        render_many(contracts, FlowContractSyncerWeb.ContractSearchView, "contract.json",
-          as: :contract
+        render_many(contracts, FlowContractSyncerWeb.PartialContractView, "partial_contract.json",
+          as: :partial_contract
         )
-    }
-  end
-
-  def render("contract.json", %{contract: contract}) do
-    %{
-      uuid: contract.uuid,
-      dependencies_count: contract.dependencies |> Enum.count(),
-      dependants_count: contract.dependants |> Enum.count()
     }
   end
 

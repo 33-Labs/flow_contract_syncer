@@ -4,6 +4,24 @@ defmodule FlowContractSyncer.Utils do
   alias FlowContractSyncer.Repo
   alias FlowContractSyncer.Schema.Contract
 
+  def format_errors(errors) do
+    Enum.reduce(errors, "", fn {key, value}, acc ->
+      error = hd(value)
+      acc <> "#{key}: #{error}\n"
+    end)
+  end
+
+  def calc_code_hash(code) when is_binary(code) do
+    :crypto.hash(:sha256, String.trim(code)) |> Base.encode16()
+  end
+
+  def is_valid_uuid(uuid) do
+    normalize_uuid(uuid)
+    true
+  rescue
+    _ -> false
+  end
+
   def normalize_address(address) do
     if String.length(address) != 18 do
       String.replace(address, "0x", "0x0")

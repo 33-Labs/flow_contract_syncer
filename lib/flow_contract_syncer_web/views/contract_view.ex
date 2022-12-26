@@ -3,15 +3,12 @@ defmodule FlowContractSyncerWeb.ContractView do
 
   use FlowContractSyncerWeb, :view
 
-  alias FlowContractSyncer.Repo
   alias FlowContractSyncer.Schema.Contract
 
   def render("show.json", %{contract: contract}) do
-    contract =
-      Repo.preload(contract, [
-        :dependencies,
-        :dependants
-      ])
+    events = Contract.extract_events(contract)
+    dependants_count = Contract.dependants_count(contract)
+    dependencies_count = Contract.dependencies_count(contract)
 
     %{
       code: 0,
@@ -20,25 +17,75 @@ defmodule FlowContractSyncerWeb.ContractView do
         address: contract.address,
         name: contract.name,
         code: contract.code,
-        dependencies: get_dependencies_uuid(contract),
-        dependants: get_dependants_uuid(contract)
+        events: events,
+        dependants_count: dependants_count,
+        dependencies_count: dependencies_count
       }
     }
   end
 
-  def render("latest.json", %{contracts: contracts}) do
-    contracts =
-      Repo.preload(contracts, [
-        :dependencies,
-        :dependants
-      ])
-
+  def render("index.json", %{contracts: contracts}) do
     %{
       code: 0,
       data:
-        render_many(contracts, FlowContractSyncerWeb.ContractSearchView, "contract.json",
-          as: :contract
+        render_many(contracts, FlowContractSyncerWeb.PartialContractView, "partial_contract.json",
+          as: :partial_contract
         )
+    }
+  end
+
+  def render("dependencies.json", %{
+        uuid: uuid,
+        dependencies: dependencies,
+        dependencies_count: count
+      })
+      when is_binary(uuid) and is_list(dependencies) and is_integer(count) do
+    %{
+      code: 0,
+      data: %{
+        uuid: uuid,
+        dependencies: dependencies,
+        total_dependants_count: count
+      }
+    }
+  end
+
+  def render("dependants.json", %{
+        uuid: uuid,
+        dependants: dependants,
+        dependants_count: count
+      })
+      when is_binary(uuid) and is_list(dependants) and is_integer(count) do
+    %{
+      code: 0,
+      data: %{
+        uuid: uuid,
+        dependants: dependants,
+        total_dependants_count: count
+      }
+    }
+  end
+
+  def render("snippets.json", %{snippets: snippets}) do
+    %{
+      code: 0,
+      data: render_many(snippets, FlowContractSyncerWeb.SnippetView, "snippet.json", as: :snippet)
+    }
+  end
+
+  def render("deployments.json", %{deployments: deployments}) do
+    %{
+      code: 0,
+      data: render_many(deployments, __MODULE__, "deployment.json", as: :deployment)
+    }
+  end
+
+  def render("deployment.json", %{deployment: deployment}) do
+    %{
+      tx_id: deployment.tx_id,
+      block_height: deployment.block_height,
+      block_timestamp: deployment.block_timestamp,
+      type: deployment.type
     }
   end
 
@@ -47,19 +94,5 @@ defmodule FlowContractSyncerWeb.ContractView do
       code: code,
       message: message
     }
-  end
-
-  defp get_dependencies_uuid(%Contract{
-         dependencies: deps
-       })
-       when is_list(deps) do
-    deps |> Enum.map(& &1.uuid)
-  end
-
-  defp get_dependants_uuid(%Contract{
-         dependants: dependants
-       })
-       when is_list(dependants) do
-    dependants |> Enum.map(& &1.uuid)
   end
 end

@@ -11,7 +11,8 @@ config :flow_contract_syncer, FlowContractSyncer.Repo,
   hostname: "localhost",
   database: "flow_contract_syncer_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: 10
+  pool_size: 10,
+  port: 5433
 
 # We don't run a server during test. If one is required,
 # you can enable the server option below.

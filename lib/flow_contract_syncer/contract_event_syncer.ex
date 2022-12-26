@@ -19,7 +19,7 @@ defmodule FlowContractSyncer.ContractEventSyncer do
   @removed_event "flow.AccountContractRemoved"
 
   def start_link(%Network{name: name, id: id} = network) do
-    Logger.info("[#{__MODULE__}_#{name}] stared")
+    Logger.info("[#{__MODULE__}_#{name}] started")
     {:ok, pid} = Task.start_link(__MODULE__, :event_sync, [network])
     Process.register(pid, :"#{name}_#{id}_event_syncer")
 
@@ -115,9 +115,17 @@ defmodule FlowContractSyncer.ContractEventSyncer do
     blocks_with_events
     |> Enum.flat_map(fn %{
                           "block_height" => raw_height,
+                          "block_timestamp" => raw_timestamp,
                           "events" => events
                         } ->
-      Enum.map(events, &Map.put(&1, "block_height", String.to_integer(raw_height)))
+      {:ok, block_timestamp} = NaiveDateTime.from_iso8601(raw_timestamp)
+
+      Enum.map(
+        events,
+        &(&1
+          |> Map.put("block_height", String.to_integer(raw_height))
+          |> Map.put("block_timestamp", block_timestamp))
+      )
     end)
   end
 

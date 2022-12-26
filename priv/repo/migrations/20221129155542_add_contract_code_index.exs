@@ -13,12 +13,17 @@ defmodule FlowContractSyncer.Repo.Migrations.AddContractCodeIndex do
     execute(
       "CREATE INDEX IF NOT EXISTS contracts_uuid_trgm_index ON contracts USING GIN (uuid gin_trgm_ops)"
     )
+
+    execute(
+      "CREATE INDEX IF NOT EXISTS snippets_code_trgm_index ON snippets USING GIN (code gin_trgm_ops)"
+    )
   end
 
   def down do
     # execute("DROP INDEX contracts_code_index")
     execute("DROP INDEX contracts_code_trgm_index")
     execute("DROP INDEX contracts_uuid_trgm_index")
+    execute("DROP INDEX snippets_code_trgm_index")
     execute("DROP EXTENSION pg_trgm")
   end
 end

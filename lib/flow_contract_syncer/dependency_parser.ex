@@ -12,7 +12,7 @@ defmodule FlowContractSyncer.DependencyParser do
   @chunk_size 100
 
   def start_link(%Network{name: name, id: id} = network) do
-    Logger.info("[#{__MODULE__}_#{name}] stared")
+    Logger.info("[#{__MODULE__}_#{name}] started")
     {:ok, pid} = Task.start_link(__MODULE__, :parse_deps, [network])
     Process.register(pid, :"#{name}_#{id}_dependency_parser")
     {:ok, pid}
@@ -21,11 +21,11 @@ defmodule FlowContractSyncer.DependencyParser do
   def parse_deps(%Network{} = network) do
     chunk_size = Network.deps_parse_chunk_size(network) || @chunk_size
 
-    Contract.unparsed(network, chunk_size)
+    Contract.deps_unparsed(network, chunk_size)
     |> Enum.each(fn contract ->
       case generate_deps(contract) do
         :ok ->
-          Contract.to_parsed!(contract)
+          Contract.to_deps_parsed!(contract)
 
         error ->
           Logger.error(
