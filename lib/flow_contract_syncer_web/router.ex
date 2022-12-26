@@ -33,7 +33,7 @@ defmodule FlowContractSyncerWeb.Router do
     get("/contracts/:uuid/dependencies", ContractController, :dependencies)
     get("/contracts/:uuid/dependants", ContractController, :dependants)
     get("/contracts/:uuid/snippets", ContractController, :snippets)
-    get("/contracts/:uuid/events", ContractController, :events)
+    get("/contracts/:uuid/deployments", ContractController, :deployments)
 
     get("/snippets/search", SnippetSearchController, :search)
     get("/snippets/:code_hash", SnippetController, :show)
@@ -70,9 +70,10 @@ defmodule FlowContractSyncerWeb.Router do
       consumes: ["application/json"],
       produces: ["application/json"],
       tags: [
-        %{name: "Contracts", description: "Contract resources"},
-        %{name: "Search", description: "Search resources"},
-        %{name: "Status", description: "System status"}
+        %{name: "Status", description: "System status"},
+        %{name: "Search", description: "Search APIs"},
+        %{name: "Contracts", description: "Contract APIs"},
+        %{name: "Snippets", description: "Snippet APIs"}
       ]
     }
   end

@@ -5,7 +5,7 @@ defmodule FlowContractSyncerWeb.SnippetSearchController do
   require Logger
 
   alias FlowContractSyncer.{Repo, Utils}
-  alias FlowContractSyncer.Schema.{Network, Snippet}
+  alias FlowContractSyncer.Schema.{Network, NetworkState, Snippet}
 
   swagger_path :search do
     get("/api/v1/snippets/search")
@@ -30,12 +30,18 @@ defmodule FlowContractSyncerWeb.SnippetSearchController do
       type(
         :query,
         :string,
-        "Should be one of all, resource, struct, interface, function, enum, event",
+        "Should be one of all, resource, struct, interface, function, enum, event, default is all",
+        required: false
+      )
+
+      offset(:query, :integer, "Should be greater than 0, default value is 0", required: false)
+
+      limit(:query, :integer, "The number of contracts, min: 1, max: 500, default: 200",
         required: false
       )
     end
 
-    response(200, "OK", Schema.ref(:PartialContractsResp))
+    response(200, "OK", Schema.ref(:SnippetsResp))
     response(422, "Unprocessable Entity", Schema.ref(:ErrorResp))
   end
 
@@ -69,6 +75,9 @@ defmodule FlowContractSyncerWeb.SnippetSearchController do
             limit: limit
           }} <- Tarams.cast(params, @search_params_schema) do
       network = Repo.get_by(Network, name: network)
+      state = NetworkState.get_by_network_id(network.id)
+      NetworkState.inc_snippet_search_count(state)
+
       snippets = Snippet.search(network, keyword, type, offset, limit)
       render(conn, :snippet_search, snippets: snippets)
     else

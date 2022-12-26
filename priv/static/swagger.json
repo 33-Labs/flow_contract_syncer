@@ -26,12 +26,16 @@
           "description": "Contract code",
           "type": "string"
         },
-        "dependants": {
-          "description": "The uuids of contracts which import this contract",
-          "type": "array"
+        "dependants_count": {
+          "description": "The number of contracts which import this contract",
+          "type": "integer"
         },
-        "dependencies": {
-          "description": "The uuids of contracts imported by this contract",
+        "dependencies_count": {
+          "description": "The number of contracts imported by this contract",
+          "type": "integer"
+        },
+        "events": {
+          "description": "The events in the contract",
           "type": "array"
         },
         "name": {
@@ -44,8 +48,9 @@
         }
       },
       "required": [
-        "dependants",
-        "dependencies",
+        "events",
+        "dependants_count",
+        "dependencies_count",
         "code",
         "name",
         "address",
@@ -69,6 +74,66 @@
         "code"
       ],
       "title": "ContractResp",
+      "type": "object"
+    },
+    "Deployment": {
+      "description": "Deployment",
+      "example": {
+        "block_height": 23227064,
+        "block_timestamp": "2022-01-25T22:34:48.000000",
+        "tx_id": "4a03653ecdb5d8fdf11c9f5a967fa126dba725da11a4d87a5fb805478b23e5ee",
+        "type": "added"
+      },
+      "properties": {
+        "block_height": {
+          "description": "Block height of the deployment",
+          "type": "integer"
+        },
+        "block_timestamp": {
+          "description": "Block timestamp of the deployment",
+          "type": "string"
+        },
+        "tx_id": {
+          "description": "Transaction hash of the deployment",
+          "type": "string"
+        },
+        "type": {
+          "description": "Contract event type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "tx_id",
+        "block_timestamp",
+        "block_height"
+      ],
+      "title": "Deployment",
+      "type": "object"
+    },
+    "Deployments": {
+      "description": "A collection of Deployment",
+      "items": {
+        "$ref": "#/definitions/Deployment"
+      },
+      "title": "Deployments",
+      "type": "array"
+    },
+    "DeploymentsResp": {
+      "description": "Deployments resp",
+      "properties": {
+        "code": {
+          "description": "Status code",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/Deployments"
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "title": "DeploymentsResp",
       "type": "object"
     },
     "ErrorResp": {
@@ -121,7 +186,7 @@
       "type": "object"
     },
     "PartialContracts": {
-      "description": "A collection of PartialContracts",
+      "description": "A collection of PartialContract",
       "items": {
         "$ref": "#/definitions/PartialContract"
       },
@@ -132,7 +197,7 @@
       "description": "PartialContracts resp",
       "properties": {
         "code": {
-          "description": "status code",
+          "description": "Status code",
           "type": "integer"
         },
         "data": {
@@ -143,6 +208,83 @@
         "code"
       ],
       "title": "PartialContractsResp",
+      "type": "object"
+    },
+    "Snippet": {
+      "description": "Snippet",
+      "example": {
+        "code": "pub event TokensDeposited(amount: UFix64, to: Address?)",
+        "code_hash": "DFFEFBF8AEBB86680E0EBABAF266F45B68A28188E3E17E81882465A910F1D80A",
+        "contracts_count": 160,
+        "type": "event"
+      },
+      "properties": {
+        "code": {
+          "description": "Snippet code",
+          "type": "string"
+        },
+        "code_hash": {
+          "description": "Snippet code hash",
+          "type": "string"
+        },
+        "contracts_count": {
+          "description": "Contracts using this snippet",
+          "type": "integer"
+        },
+        "type": {
+          "description": "Snippet type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "contracts_count",
+        "code_hash",
+        "code"
+      ],
+      "title": "Snippet",
+      "type": "object"
+    },
+    "SnippetResp": {
+      "description": "Snippet resp",
+      "properties": {
+        "code": {
+          "description": "Status code",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/Snippet"
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "title": "SnippetResp",
+      "type": "object"
+    },
+    "Snippets": {
+      "description": "A collection of Snippet",
+      "items": {
+        "$ref": "#/definitions/Snippet"
+      },
+      "title": "Snippets",
+      "type": "array"
+    },
+    "SnippetsResp": {
+      "description": "Snippets resp",
+      "properties": {
+        "code": {
+          "description": "Status code",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/Snippets"
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "title": "SnippetsResp",
       "type": "object"
     },
     "Status": {
@@ -196,6 +338,53 @@
       ],
       "title": "StatusResp",
       "type": "object"
+    },
+    "UUIDs": {
+      "example": {
+        "dependencies": [
+          "A.f233dcee88fe0abe.FungibleToken",
+          "A.1d7e57aa55817448.NonFungibleToken"
+        ],
+        "total_dependencies_count": 2,
+        "uuid": "A.1d7e57aa55817448.MetadataViews"
+      },
+      "properties": {
+        "dependencies": {
+          "description": "Dependencies list",
+          "type": "string"
+        },
+        "total_dependencies_count": {
+          "description": "Dependencies count",
+          "type": "integer"
+        },
+        "uuid": {
+          "description": "Contract uuid",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uuid",
+        "total_dependencies_count",
+        "dependencies"
+      ],
+      "type": "object"
+    },
+    "UUIDsResp": {
+      "description": "UUIDs resp",
+      "properties": {
+        "code": {
+          "description": "status code",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/UUIDs"
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "title": "UUIDsResp",
+      "type": "object"
     }
   },
   "host": "localhost:4000",
@@ -211,6 +400,168 @@
   },
   "paths": {
     "/api/v1/contracts": {
+      "get": {
+        "description": "",
+        "operationId": "query_contracts",
+        "parameters": [
+          {
+            "description": "The owner of contracts",
+            "in": "query",
+            "name": "owner",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "default": "inserted_at",
+            "description": "Should be one of inserted_at, dependants_count, dependencies_count, default is inserted_at",
+            "enum": [
+              "inserted_at",
+              "dependencies_count",
+              "dependants_count"
+            ],
+            "in": "query",
+            "name": "order_by",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "description": "Ascend or descend",
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "in": "query",
+            "name": "order_by_direction",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "description": "Should be greater than 0, default value is 0",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "description": "The number of contracts, min: 1, max: 500, default: 200",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "description": "Flow network, default value is \"mainnet\"",
+            "enum": [
+              "mainnet"
+            ],
+            "in": "query",
+            "name": "network",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/PartialContractsResp"
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "schema": {
+              "$ref": "#/definitions/ErrorResp"
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Query contracts",
+        "tags": [
+          "Contracts"
+        ]
+      }
+    },
+    "/api/v1/contracts/search": {
+      "get": {
+        "description": "",
+        "operationId": "search_contract",
+        "parameters": [
+          {
+            "description": "Keyword for searching, case-insensitive",
+            "in": "query",
+            "name": "keyword",
+            "required": true,
+            "type": "string",
+            "x-example": "topshot"
+          },
+          {
+            "description": "Flow network, default value is \"mainnet\"",
+            "enum": [
+              "mainnet"
+            ],
+            "in": "query",
+            "name": "network",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "description": "Search scope, should be \"code\" or \"uuid\" or \"uuid,code\". Default is \"uuid,code\". NOTE: Search in code is a bit slower than search in uuid",
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "description": "Should be greater than 0, default value is 0",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "description": "The number of contracts, min: 1, max: 500, default: 200",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/PartialContractsResp"
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "schema": {
+              "$ref": "#/definitions/ErrorResp"
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Search contracts, order by dependants count desc",
+        "tags": [
+          "Search"
+        ]
+      }
+    },
+    "/api/v1/contracts/{uuid}": {
       "get": {
         "description": "",
         "operationId": "query_contract",
@@ -276,77 +627,55 @@
         ]
       }
     },
-    "/api/v1/search": {
+    "/api/v1/contracts/{uuid}/dependants": {
       "get": {
         "description": "",
-        "operationId": "search_contract",
+        "operationId": "query_contract_dependants",
         "parameters": [
           {
-            "description": "Keyword for searching, case-insensitive",
-            "in": "query",
-            "name": "keyword",
-            "required": true,
-            "type": "string",
-            "x-example": "topshot"
-          },
-          {
-            "description": "Flow network, default value is \"mainnet\"",
-            "enum": [
-              "mainnet"
-            ],
-            "in": "query",
-            "name": "network",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "description": "Search scope, should be \"code\" or \"uuid\" or \"uuid,code\". Default is \"uuid,code\". NOTE: Search in code is a bit slower than search in uuid",
-            "in": "query",
-            "name": "scope",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/PartialContractsResp"
-            }
-          },
-          "422": {
-            "description": "Unprocessable Entity",
-            "schema": {
-              "$ref": "#/definitions/ErrorResp"
-            }
-          }
-        },
-        "security": [
-          {
-            "Bearer": []
-          }
-        ],
-        "summary": "Search contracts, order by dependants count desc",
-        "tags": [
-          "Search"
-        ]
-      }
-    },
-    "/api/v1/snippets": {
-      "get": {
-        "description": "",
-        "operationId": "query_snippet",
-        "parameters": [
-          {
-            "description": "Snippet code hash",
+            "description": "Contract uuid",
             "in": "path",
-            "name": "code_hash",
+            "name": "uuid",
             "required": true,
             "type": "string",
-            "x-example": "ltBsYqD8m0S/EEDaBv4jwRlO4jpGOqEWQ6SRWwzsxTA="
+            "x-example": "A.0b2a3299cc857e29.TopShot"
+          },
+          {
+            "default": "address",
+            "description": "Should be one of address, name, default is address",
+            "enum": [
+              "address",
+              "name"
+            ],
+            "in": "query",
+            "name": "order_by",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "description": "Ascend or descend",
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "in": "query",
+            "name": "order_by_direction",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "description": "Should be greater than 0, default value is 0",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "description": "The number of contracts, min: 1, max: 500, default: 200",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "type": "integer"
           },
           {
             "description": "Flow network, default value is \"mainnet\"",
@@ -366,7 +695,7 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/ContractResp"
+              "$ref": "#/definitions/UUIDsResp"
             }
           },
           "404": {
@@ -387,9 +716,237 @@
             "Bearer": []
           }
         ],
-        "summary": "Query for specific snippet",
+        "summary": "Query contract dependants",
         "tags": [
-          "Snippets"
+          "Contracts"
+        ]
+      }
+    },
+    "/api/v1/contracts/{uuid}/dependencies": {
+      "get": {
+        "description": "",
+        "operationId": "query_contract_dependencies",
+        "parameters": [
+          {
+            "description": "Contract uuid",
+            "in": "path",
+            "name": "uuid",
+            "required": true,
+            "type": "string",
+            "x-example": "A.0b2a3299cc857e29.TopShot"
+          },
+          {
+            "default": "address",
+            "description": "Should be one of address, name, default is address",
+            "enum": [
+              "address",
+              "name"
+            ],
+            "in": "query",
+            "name": "order_by",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "description": "Ascend or descend",
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "in": "query",
+            "name": "order_by_direction",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "description": "Should be greater than 0, default value is 0",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "description": "The number of contracts, min: 1, max: 500, default: 200",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "description": "Flow network, default value is \"mainnet\"",
+            "enum": [
+              "mainnet"
+            ],
+            "in": "query",
+            "name": "network",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/UUIDsResp"
+            }
+          },
+          "404": {
+            "description": "Contract not found",
+            "schema": {
+              "$ref": "#/definitions/ErrorResp"
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "schema": {
+              "$ref": "#/definitions/ErrorResp"
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Query contract dependencies",
+        "tags": [
+          "Contracts"
+        ]
+      }
+    },
+    "/api/v1/contracts/{uuid}/deployments": {
+      "get": {
+        "description": "",
+        "operationId": "query_contract_deployments",
+        "parameters": [
+          {
+            "description": "Contract uuid",
+            "in": "path",
+            "name": "uuid",
+            "required": true,
+            "type": "string",
+            "x-example": "A.0b2a3299cc857e29.TopShot"
+          },
+          {
+            "description": "Flow network, default value is \"mainnet\"",
+            "enum": [
+              "mainnet"
+            ],
+            "in": "query",
+            "name": "network",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/DeploymentsResp"
+            }
+          },
+          "404": {
+            "description": "Contract not found",
+            "schema": {
+              "$ref": "#/definitions/ErrorResp"
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "schema": {
+              "$ref": "#/definitions/ErrorResp"
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Query contract deployments",
+        "tags": [
+          "Contracts"
+        ]
+      }
+    },
+    "/api/v1/contracts/{uuid}/snippets": {
+      "get": {
+        "description": "",
+        "operationId": "query_contract_sinppets",
+        "parameters": [
+          {
+            "description": "Contract uuid",
+            "in": "path",
+            "name": "uuid",
+            "required": true,
+            "type": "string",
+            "x-example": "A.0b2a3299cc857e29.TopShot"
+          },
+          {
+            "default": "all",
+            "description": "Snippet type",
+            "enum": [
+              "resource",
+              "struct",
+              "interface",
+              "function",
+              "enum",
+              "event",
+              "all"
+            ],
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "description": "Flow network, default value is \"mainnet\"",
+            "enum": [
+              "mainnet"
+            ],
+            "in": "query",
+            "name": "network",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/SnippetsResp"
+            }
+          },
+          "404": {
+            "description": "Contract not found",
+            "schema": {
+              "$ref": "#/definitions/ErrorResp"
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "schema": {
+              "$ref": "#/definitions/ErrorResp"
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Query contract snippets",
+        "tags": [
+          "Contracts"
         ]
       }
     },
@@ -417,11 +974,25 @@
             "type": "string"
           },
           {
-            "description": "Should be one of all, resource, struct, interface, function, enum, event",
+            "description": "Should be one of all, resource, struct, interface, function, enum, event, default is all",
             "in": "query",
             "name": "type",
             "required": false,
             "type": "string"
+          },
+          {
+            "description": "Should be greater than 0, default value is 0",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "description": "The number of contracts, min: 1, max: 500, default: 200",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "type": "integer"
           }
         ],
         "produces": [
@@ -431,7 +1002,7 @@
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/PartialContractsResp"
+              "$ref": "#/definitions/SnippetsResp"
             }
           },
           "422": {
@@ -449,6 +1020,136 @@
         "summary": "Search snippets",
         "tags": [
           "Search"
+        ]
+      }
+    },
+    "/api/v1/snippets/{code_hash}": {
+      "get": {
+        "description": "",
+        "operationId": "query_snippet",
+        "parameters": [
+          {
+            "description": "Snippet code hash",
+            "in": "path",
+            "name": "code_hash",
+            "required": true,
+            "type": "string",
+            "x-example": "40E0416B13BC53F23FCB96FBCAF9E477621952650ADB4D93C2688D22E76EE2A2"
+          },
+          {
+            "description": "Flow network, default value is \"mainnet\"",
+            "enum": [
+              "mainnet"
+            ],
+            "in": "query",
+            "name": "network",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/SnippetResp"
+            }
+          },
+          "404": {
+            "description": "Snippet not found",
+            "schema": {
+              "$ref": "#/definitions/ErrorResp"
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "schema": {
+              "$ref": "#/definitions/ErrorResp"
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Query for specific snippet",
+        "tags": [
+          "Snippets"
+        ]
+      }
+    },
+    "/api/v1/snippets/{code_hash}/contracts": {
+      "get": {
+        "description": "",
+        "operationId": "query_snippet_contracts",
+        "parameters": [
+          {
+            "description": "Snippet code hash",
+            "in": "path",
+            "name": "code_hash",
+            "required": true,
+            "type": "string",
+            "x-example": "40E0416B13BC53F23FCB96FBCAF9E477621952650ADB4D93C2688D22E76EE2A2"
+          },
+          {
+            "description": "Flow network, default value is \"mainnet\"",
+            "enum": [
+              "mainnet"
+            ],
+            "in": "query",
+            "name": "network",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "description": "Should be greater than 0, default value is 0",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "description": "The number of contracts, min: 1, max: 500, default: 200",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/PartialContractsResp"
+            }
+          },
+          "404": {
+            "description": "Snippet not found",
+            "schema": {
+              "$ref": "#/definitions/ErrorResp"
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "schema": {
+              "$ref": "#/definitions/ErrorResp"
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Query the contracts using specific snippet",
+        "tags": [
+          "Snippets"
         ]
       }
     },
@@ -515,16 +1216,20 @@
   "swagger": "2.0",
   "tags": [
     {
-      "description": "Contract resources",
-      "name": "Contracts"
+      "description": "System status",
+      "name": "Status"
     },
     {
-      "description": "Search resources",
+      "description": "Search APIs",
       "name": "Search"
     },
     {
-      "description": "System status",
-      "name": "Status"
+      "description": "Contract APIs",
+      "name": "Contracts"
+    },
+    {
+      "description": "Snippet APIs",
+      "name": "Snippets"
     }
   ]
 }
