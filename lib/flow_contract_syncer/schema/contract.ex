@@ -270,16 +270,16 @@ defmodule FlowContractSyncer.Schema.Contract do
     query =
       case scope do
         "uuid" ->
-          from c in query, where: c.network_id == ^network_id and like(c.uuid, ^search_term)
+          from c in query, where: c.network_id == ^network_id and ilike(c.uuid, ^search_term)
 
         "code" ->
-          from c in query, where: c.network_id == ^network_id and like(c.code, ^search_term)
+          from c in query, where: c.network_id == ^network_id and ilike(c.code, ^search_term)
 
         s when s in ["uuid,code", "code,uuid"] ->
           from c in query,
             where:
               c.network_id == ^network_id and
-                (like(c.code, ^search_term) or like(c.uuid, ^search_term))
+                (ilike(c.code, ^search_term) or ilike(c.uuid, ^search_term))
       end
 
     Repo.all(query)
