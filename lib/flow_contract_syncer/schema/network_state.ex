@@ -53,7 +53,14 @@ defmodule FlowContractSyncer.Schema.NetworkState do
   def get_by_network_id(network_id) do
     case Repo.get_by(__MODULE__, network_id: network_id) do
       nil ->
-        %__MODULE__{} |> changeset(%{network_id: network_id, synced_height: 0, contract_search_count: 0, snippet_search_count: 0}) |> Repo.insert!()
+        %__MODULE__{}
+        |> changeset(%{
+          network_id: network_id,
+          synced_height: 0,
+          contract_search_count: 0,
+          snippet_search_count: 0
+        })
+        |> Repo.insert!()
 
       state ->
         state

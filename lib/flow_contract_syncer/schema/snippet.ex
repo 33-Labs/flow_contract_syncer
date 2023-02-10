@@ -94,7 +94,20 @@ defmodule FlowContractSyncer.Schema.Snippet do
       from s in __MODULE__,
         left_join: cs in subquery(contracts),
         on: cs.snippet_id == s.id,
-        where: s.network_id == ^network_id and ilike(s.code, ^search_term),
+        where: s.network_id == ^network_id and ilike(s.code, ^search_term)
+
+    query =
+      case types do
+        [:all] -> query
+        types -> from s in query, where: s.type in ^types
+      end
+
+    count =
+      from(s in query, select: count(s.id))
+      |> Repo.one()
+
+    query =
+      from [s, cs] in query,
         order_by: [desc: coalesce(cs.count, 0)],
         offset: ^offset,
         limit: ^limit,
@@ -105,13 +118,8 @@ defmodule FlowContractSyncer.Schema.Snippet do
           contracts_count: coalesce(cs.count, 0)
         }
 
-    query =
-      case types do
-        [:all] -> query
-        types -> from s in query, where: s.type in ^types
-      end
-
-    query |> Repo.all()
+    snippets = query |> Repo.all()
+    %{count: count, snippets: snippets}
   end
 
   def get_resources(code) when is_binary(code) do

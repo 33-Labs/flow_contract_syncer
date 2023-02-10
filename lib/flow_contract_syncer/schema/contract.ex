@@ -87,11 +87,16 @@ defmodule FlowContractSyncer.Schema.Contract do
     end)
   end
 
-  def dependencies(%__MODULE__{id: contract_id, network_id: network_id}, :dependants_count, direction, offset, limit)
-    when is_integer(offset) and is_integer(limit) do
+  def dependencies(
+        %__MODULE__{id: contract_id, network_id: network_id},
+        :dependants_count,
+        direction,
+        offset,
+        limit
+      )
+      when is_integer(offset) and is_integer(limit) do
     direction = String.to_atom(direction)
     dependants = group_by_dependants()
-    dependencies = group_by_dependencies()
 
     query =
       from c in __MODULE__,
@@ -99,13 +104,13 @@ defmodule FlowContractSyncer.Schema.Contract do
         on: d.dependency_id == c.id,
         join: ddd in Dependency,
         on: c.id == ddd.dependency_id and ddd.contract_id == ^contract_id,
-        where: c.network_id == ^network_id, 
+        where: c.network_id == ^network_id,
         order_by: [{^direction, coalesce(d.count, 0)}],
         offset: ^offset,
         limit: ^limit,
         select: %{uuid: c.uuid}
 
-      query |> Repo.all() |> Enum.map(& &1.uuid)
+    query |> Repo.all() |> Enum.map(& &1.uuid)
   end
 
   def dependencies(%__MODULE__{id: contract_id}, order_by, direction, offset, limit)
@@ -124,11 +129,16 @@ defmodule FlowContractSyncer.Schema.Contract do
     |> Enum.map(& &1.uuid)
   end
 
-  def dependants(%__MODULE__{id: contract_id, network_id: network_id}, :dependants_count, direction, offset, limit)
-    when is_integer(offset) and is_integer(limit) do
+  def dependants(
+        %__MODULE__{id: contract_id, network_id: network_id},
+        :dependants_count,
+        direction,
+        offset,
+        limit
+      )
+      when is_integer(offset) and is_integer(limit) do
     direction = String.to_atom(direction)
     dependants = group_by_dependants()
-    dependencies = group_by_dependencies()
 
     query =
       from c in __MODULE__,
@@ -136,13 +146,13 @@ defmodule FlowContractSyncer.Schema.Contract do
         on: d.dependency_id == c.id,
         join: ddd in Dependency,
         on: c.id == ddd.contract_id and ddd.dependency_id == ^contract_id,
-        where: c.network_id == ^network_id, 
+        where: c.network_id == ^network_id,
         order_by: [{^direction, coalesce(d.count, 0)}],
         offset: ^offset,
         limit: ^limit,
         select: %{uuid: c.uuid}
 
-      query |> Repo.all() |> Enum.map(& &1.uuid)
+    query |> Repo.all() |> Enum.map(& &1.uuid)
   end
 
   def dependants(%__MODULE__{id: contract_id}, order_by, direction, offset, limit)
@@ -249,7 +259,14 @@ defmodule FlowContractSyncer.Schema.Contract do
         left_join: dd in subquery(dependencies),
         on: dd.contract_id == c.id,
         join: cs in ContractSnippet,
-        on: c.id == cs.contract_id and cs.snippet_id == ^snippet_id,
+        on: c.id == cs.contract_id and cs.snippet_id == ^snippet_id
+
+    count =
+      from(c in query, select: count(c.id))
+      |> Repo.one()
+
+    query =
+      from [c, d, dd, _cs] in query,
         order_by: [desc: coalesce(d.count, 0)],
         offset: ^offset,
         limit: ^limit,
@@ -259,7 +276,7 @@ defmodule FlowContractSyncer.Schema.Contract do
           dependencies_count: coalesce(dd.count, 0)
         }
 
-    Repo.all(query)
+    %{count: count, contracts: Repo.all(query)}
   end
 
   def with_deps_uuids(%__MODULE__{} = contract) do
@@ -299,15 +316,7 @@ defmodule FlowContractSyncer.Schema.Contract do
         left_join: d in subquery(dependants),
         on: d.dependency_id == c.id,
         left_join: dd in subquery(dependencies),
-        on: dd.contract_id == c.id,
-        order_by: [desc: coalesce(d.count, 0)],
-        offset: ^offset,
-        limit: ^limit,
-        select: %{
-          uuid: c.uuid,
-          dependants_count: coalesce(d.count, 0),
-          dependencies_count: coalesce(dd.count, 0)
-        }
+        on: dd.contract_id == c.id
 
     query =
       case scope do
@@ -324,7 +333,22 @@ defmodule FlowContractSyncer.Schema.Contract do
                 (ilike(c.code, ^search_term) or ilike(c.uuid, ^search_term))
       end
 
-    Repo.all(query)
+    count =
+      from(c in query, select: count(c.id))
+      |> Repo.one()
+
+    query =
+      from [c, d, dd] in query,
+        order_by: [desc: coalesce(d.count, 0)],
+        offset: ^offset,
+        limit: ^limit,
+        select: %{
+          uuid: c.uuid,
+          dependants_count: coalesce(d.count, 0),
+          dependencies_count: coalesce(dd.count, 0)
+        }
+
+    %{count: count, contracts: Repo.all(query)}
   end
 
   def order_by(:inserted_at, %Network{id: network_id}, owner, direction, offset, limit)
@@ -339,7 +363,16 @@ defmodule FlowContractSyncer.Schema.Contract do
         on: d.dependency_id == c.id,
         left_join: dd in subquery(dependencies),
         on: dd.contract_id == c.id,
-        where: c.network_id == ^network_id,
+        where: c.network_id == ^network_id
+
+    query = filter_by_owner(query, owner)
+
+    count =
+      from(c in query, select: count(c.id))
+      |> Repo.one()
+
+    contracts =
+      from [c, d, dd] in query,
         order_by: [{^direction, c.inserted_at}],
         offset: ^offset,
         limit: ^limit,
@@ -349,7 +382,8 @@ defmodule FlowContractSyncer.Schema.Contract do
           dependencies_count: coalesce(dd.count, 0)
         }
 
-    query |> filter_by_owner(owner) |> Repo.all()
+    result = contracts |> Repo.all()
+    %{count: count, contracts: result}
   end
 
   def order_by(:dependants_count, %Network{id: network_id}, owner, direction, offset, limit)
@@ -369,7 +403,16 @@ defmodule FlowContractSyncer.Schema.Contract do
         on: d.dependency_id == c.id,
         left_join: dd in subquery(dependencies),
         on: dd.contract_id == c.id,
-        where: c.network_id == ^network_id,
+        where: c.network_id == ^network_id
+
+    query = filter_by_owner(query, owner)
+
+    count =
+      from(c in query, select: count(c.id))
+      |> Repo.one()
+
+    contracts =
+      from [c, d, dd] in query,
         order_by: [{^direction, coalesce(d.count, 0)}],
         offset: ^offset,
         limit: ^limit,
@@ -379,7 +422,8 @@ defmodule FlowContractSyncer.Schema.Contract do
           dependencies_count: coalesce(dd.count, 0)
         }
 
-    query |> filter_by_owner(owner) |> Repo.all()
+    result = contracts |> Repo.all()
+    %{count: count, contracts: result}
   end
 
   def order_by(:dependencies_count, %Network{id: network_id}, owner, direction, offset, limit)
@@ -399,7 +443,16 @@ defmodule FlowContractSyncer.Schema.Contract do
         on: d.contract_id == c.id,
         left_join: dd in subquery(dependants),
         on: dd.dependency_id == c.id,
-        where: c.network_id == ^network_id,
+        where: c.network_id == ^network_id
+
+    query = filter_by_owner(query, owner)
+
+    count =
+      from(c in query, select: count(c.id))
+      |> Repo.one()
+
+    contracts =
+      from [c, d, dd] in query,
         order_by: [{^direction, coalesce(d.count, 0)}],
         offset: ^offset,
         limit: ^limit,
@@ -409,7 +462,8 @@ defmodule FlowContractSyncer.Schema.Contract do
           dependencies_count: coalesce(d.count, 0)
         }
 
-    query |> filter_by_owner(owner) |> Repo.all()
+    result = contracts |> Repo.all()
+    %{count: count, contracts: result}
   end
 
   def extract_snippets(%__MODULE__{code: contract_code}) do

@@ -40,6 +40,18 @@ defmodule FlowContractSyncerWeb.Router do
     get("/snippets/:code_hash/contracts", SnippetController, :contracts)
   end
 
+  scope "/api/v2", FlowContractSyncerWeb.V2 do
+    pipe_through [:api, :authenticate_api_user]
+
+    get("/contracts/search", ContractSearchController, :search)
+    get("/contracts", ContractController, :index)
+    get("/contracts/:uuid/snippets", ContractController, :snippets)
+    get("/contracts/:uuid/deployments", ContractController, :deployments)
+
+    get("/snippets/search", SnippetSearchController, :search)
+    get("/snippets/:code_hash/contracts", SnippetController, :contracts)
+  end
+
   scope "/api/v1/swagger" do
     forward "/", PhoenixSwagger.Plug.SwaggerUI,
       otp_app: :flow_contract_syncer,

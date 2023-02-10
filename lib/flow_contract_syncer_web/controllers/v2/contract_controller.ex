@@ -1,4 +1,4 @@
-defmodule FlowContractSyncerWeb.ContractController do
+defmodule FlowContractSyncerWeb.V2.ContractController do
   use FlowContractSyncerWeb, :controller
   use PhoenixSwagger
 
@@ -6,87 +6,6 @@ defmodule FlowContractSyncerWeb.ContractController do
 
   alias FlowContractSyncer.{ContractSyncer, Repo, Utils}
   alias FlowContractSyncer.Schema.{Contract, Network}
-
-  swagger_path :show do
-    get("/api/v1/contracts/{uuid}")
-    summary("Query for specific contract")
-    produces("application/json")
-    tag("Contracts")
-    operation_id("query_contract")
-
-    security([%{Bearer: []}])
-
-    parameters do
-      uuid(:path, :string, "Contract uuid", required: true, example: "A.0b2a3299cc857e29.TopShot")
-
-      network(:query, :string, "Flow network, default value is \"mainnet\"",
-        required: false,
-        enum: [:mainnet]
-      )
-
-      sync(
-        :query,
-        :bool,
-        "Should sync the latest version from the blockchain before showing the contract",
-        default: false
-      )
-    end
-
-    response(200, "OK", Schema.ref(:ContractResp))
-    response(404, "Contract not found", Schema.ref(:ErrorResp))
-    response(422, "Unprocessable Entity", Schema.ref(:ErrorResp))
-  end
-
-  defp show_params_schema,
-    do: %{
-      uuid: [type: :string, required: true, cast_func: &uuid_cast_func/1],
-      network: [type: :string, in: ["mainnet"], default: "mainnet"],
-      sync: [type: :boolean, default: false]
-    }
-
-  def show(conn, params) do
-    with {:ok,
-          %{
-            network: network,
-            uuid: uuid,
-            sync: should_sync
-          }} <- Tarams.cast(params, show_params_schema()) do
-      network = Repo.get_by(Network, name: network)
-      uuid = String.trim(uuid)
-
-      contract_res =
-        if should_sync do
-          ["A", raw_address, name] = uuid |> String.split(".")
-          address = Utils.normalize_address("0x" <> raw_address)
-          ContractSyncer.sync_contract(network, address, name, :normal)
-        else
-          case Repo.get_by(Contract, network_id: network.id, uuid: uuid) do
-            %Contract{} = contract -> {:ok, contract}
-            _otherwise -> {:error, :not_found}
-          end
-        end
-
-      case contract_res do
-        {:ok, %Contract{} = contract} ->
-          render(conn, :show, contract: contract)
-
-        {:error, :not_found} ->
-          conn
-          |> put_status(:not_found)
-          |> render(:error, code: 102, message: "contract not found")
-
-        {:error, _error} ->
-          conn
-          |> put_status(:unprocessable_entity)
-          |> render(:error, code: 104, message: "invalid params")
-      end
-    else
-      {:error, errors} ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> render(:error, code: 104, message: Utils.format_errors(errors))
-    end
-  end
 
   swagger_path :index do
     get("/api/v1/contracts")
@@ -155,7 +74,7 @@ defmodule FlowContractSyncerWeb.ContractController do
           }} <- Tarams.cast(params, index_params_schema()) do
       network = Repo.get_by(Network, name: network)
 
-      %{count: _count, contracts: contracts} =
+      %{count: count, contracts: contracts} =
         case order_by do
           "inserted_at" ->
             Contract.order_by(:inserted_at, network, owner, direction, offset, limit)
@@ -167,7 +86,7 @@ defmodule FlowContractSyncerWeb.ContractController do
             Contract.order_by(:dependencies_count, network, owner, direction, offset, limit)
         end
 
-      render(conn, :index, contracts: contracts)
+      render(conn, :index, count: count, contracts: contracts)
     else
       {:error, errors} ->
         conn

@@ -1,4 +1,4 @@
-defmodule FlowContractSyncerWeb.SnippetSearchController do
+defmodule FlowContractSyncerWeb.V2.SnippetSearchController do
   use FlowContractSyncerWeb, :controller
   use PhoenixSwagger
 
@@ -78,8 +78,8 @@ defmodule FlowContractSyncerWeb.SnippetSearchController do
       state = NetworkState.get_by_network_id(network.id)
       NetworkState.inc_snippet_search_count(state)
 
-      %{snippets: snippets} = Snippet.search(network, keyword, type, offset, limit)
-      render(conn, :snippet_search, snippets: snippets)
+      %{count: count, snippets: snippets} = Snippet.search(network, keyword, type, offset, limit)
+      render(conn, :snippet_search, snippets: snippets, count: count)
     else
       {:error, errors} ->
         conn

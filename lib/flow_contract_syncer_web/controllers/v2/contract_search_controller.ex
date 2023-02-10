@@ -1,23 +1,23 @@
-defmodule FlowContractSyncerWeb.SnippetSearchController do
+defmodule FlowContractSyncerWeb.V2.ContractSearchController do
   use FlowContractSyncerWeb, :controller
   use PhoenixSwagger
 
   require Logger
 
   alias FlowContractSyncer.{Repo, Utils}
-  alias FlowContractSyncer.Schema.{Network, NetworkState, Snippet}
+  alias FlowContractSyncer.Schema.{Contract, Network, NetworkState}
 
   swagger_path :search do
-    get("/api/v1/snippets/search")
-    summary("Search snippets")
+    get("/api/v1/contracts/search")
+    summary("Search contracts, order by dependants count desc")
     produces("application/json")
     tag("Search")
-    operation_id("search_snippets")
+    operation_id("search_contract")
 
     security([%{Bearer: []}])
 
     parameters do
-      keyword(:query, :string, "Keyword for searching, case-insensitive",
+      keyword(:query, :string, "Keyword for searching, case-sensitive",
         required: true,
         example: "topshot"
       )
@@ -27,10 +27,10 @@ defmodule FlowContractSyncerWeb.SnippetSearchController do
         enum: [:mainnet]
       )
 
-      type(
+      scope(
         :query,
         :string,
-        "Should be one of all, resource, struct, interface, function, enum, event, default is all",
+        "Search scope, should be \"code\" or \"uuid\" or \"uuid,code\". Default is \"uuid,code\". NOTE: Search in code is a bit slower than search in uuid",
         required: false
       )
 
@@ -41,47 +41,41 @@ defmodule FlowContractSyncerWeb.SnippetSearchController do
       )
     end
 
-    response(200, "OK", Schema.ref(:SnippetsResp))
+    response(200, "OK", Schema.ref(:PartialContractsResp))
     response(422, "Unprocessable Entity", Schema.ref(:ErrorResp))
   end
 
   @search_params_schema %{
     keyword: [type: :string, required: true, length: [min: 3]],
     network: [type: :string, in: ["mainnet"], default: "mainnet"],
-    type: [
-      type: :string,
-      in: [
-        "resource",
-        "struct",
-        "interface",
-        "function",
-        "enum",
-        "event",
-        "all"
-      ],
-      default: "all"
-    ],
+    scope: [type: :string, in: ["code", "uuid", "uuid,code", "code,uuid"], default: "uuid,code"],
     offset: [type: :integer, number: [min: 0], default: 0],
     limit: [type: :integer, number: [min: 1, max: 500], default: 200]
   }
 
   def search(conn, params) do
+    Logger.info("[#{__MODULE__}] #{inspect(params)}")
+
     with {:ok,
           %{
             keyword: keyword,
             network: network,
-            type: type,
+            scope: scope,
             offset: offset,
             limit: limit
           }} <- Tarams.cast(params, @search_params_schema) do
       network = Repo.get_by(Network, name: network)
       state = NetworkState.get_by_network_id(network.id)
-      NetworkState.inc_snippet_search_count(state)
+      NetworkState.inc_contract_search_count(state)
 
-      %{snippets: snippets} = Snippet.search(network, keyword, type, offset, limit)
-      render(conn, :snippet_search, snippets: snippets)
+      %{count: count, contracts: contracts} =
+        Contract.search(network, keyword, scope, offset, limit)
+
+      render(conn, :contract_search, contracts: contracts, count: count)
     else
       {:error, errors} ->
+        Logger.error(errors)
+
         conn
         |> put_status(:unprocessable_entity)
         |> render(:error, code: 104, message: Utils.format_errors(errors))

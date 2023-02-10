@@ -54,7 +54,7 @@ defmodule FlowContractSyncerWeb.ContractSearchController do
   }
 
   def search(conn, params) do
-    IO.inspect(params)
+    Logger.info("[#{__MODULE__}] #{inspect(params)}")
 
     with {:ok,
           %{
@@ -68,11 +68,11 @@ defmodule FlowContractSyncerWeb.ContractSearchController do
       state = NetworkState.get_by_network_id(network.id)
       NetworkState.inc_contract_search_count(state)
 
-      contracts = Contract.search(network, keyword, scope, offset, limit)
+      %{contracts: contracts} = Contract.search(network, keyword, scope, offset, limit)
       render(conn, :contract_search, contracts: contracts)
     else
       {:error, errors} ->
-        IO.inspect(errors)
+        Logger.error(errors)
 
         conn
         |> put_status(:unprocessable_entity)
