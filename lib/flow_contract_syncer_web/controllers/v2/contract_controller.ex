@@ -4,11 +4,11 @@ defmodule FlowContractSyncerWeb.V2.ContractController do
 
   require Logger
 
-  alias FlowContractSyncer.{ContractSyncer, Repo, Utils}
+  alias FlowContractSyncer.{Repo, Utils}
   alias FlowContractSyncer.Schema.{Contract, Network}
 
   swagger_path :index do
-    get("/api/v1/contracts")
+    get("/api/v2/contracts")
     summary("Query contracts")
     produces("application/json")
     tag("Contracts")
@@ -502,6 +502,16 @@ defmodule FlowContractSyncerWeb.V2.ContractController do
           type(:array)
           items(Schema.ref(:PartialContract))
         end,
+      PartialContractsData:
+        swagger_schema do
+          title("PartialContractsData")
+          description("PartialContracts data")
+
+          properties do
+            total_contracts_count(:integer, "contracts count", required: true)
+            contracts(Schema.ref(:PartialContracts))
+          end
+        end,
       PartialContractsResp:
         swagger_schema do
           title("PartialContractsResp")
@@ -509,7 +519,7 @@ defmodule FlowContractSyncerWeb.V2.ContractController do
 
           properties do
             code(:integer, "Status code", required: true)
-            data(Schema.ref(:PartialContracts))
+            data(Schema.ref(:PartialContractsData))
           end
         end,
       Snippet:
@@ -548,6 +558,16 @@ defmodule FlowContractSyncerWeb.V2.ContractController do
           type(:array)
           items(Schema.ref(:Snippet))
         end,
+      SnippetsData:
+        swagger_schema do
+          title("SnippetsData")
+          description("Snippets data")
+
+          properties do
+            total_snippets_count(:integer, "snippets count", required: true)
+            snippets(Schema.ref(:Snippets))
+          end
+        end,
       SnippetsResp:
         swagger_schema do
           title("SnippetsResp")
@@ -555,7 +575,7 @@ defmodule FlowContractSyncerWeb.V2.ContractController do
 
           properties do
             code(:integer, "Status code", required: true)
-            data(Schema.ref(:Snippets))
+            data(Schema.ref(:SnippetsData))
           end
         end,
       Deployment:
@@ -584,6 +604,16 @@ defmodule FlowContractSyncerWeb.V2.ContractController do
           type(:array)
           items(Schema.ref(:Deployment))
         end,
+      DeploymentsData:
+        swagger_schema do
+          title("DeploymentsData")
+          description("Deployments data")
+
+          properties do
+            total_deployments_count(:integer, "snippets count", required: true)
+            deployments(Schema.ref(:Deployments))
+          end
+        end,
       DeploymentsResp:
         swagger_schema do
           title("DeploymentsResp")
@@ -591,7 +621,7 @@ defmodule FlowContractSyncerWeb.V2.ContractController do
 
           properties do
             code(:integer, "Status code", required: true)
-            data(Schema.ref(:Deployments))
+            data(Schema.ref(:DeploymentsData))
           end
         end,
       UUIDs:

@@ -52,7 +52,7 @@ defmodule FlowContractSyncerWeb.Router do
     get("/snippets/:code_hash/contracts", SnippetController, :contracts)
   end
 
-  scope "/api/v1/swagger" do
+  scope "/api/swagger" do
     forward "/", PhoenixSwagger.Plug.SwaggerUI,
       otp_app: :flow_contract_syncer,
       swagger_file: "swagger.json"

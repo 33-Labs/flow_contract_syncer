@@ -8,7 +8,7 @@ defmodule FlowContractSyncerWeb.V2.ContractSearchController do
   alias FlowContractSyncer.Schema.{Contract, Network, NetworkState}
 
   swagger_path :search do
-    get("/api/v1/contracts/search")
+    get("/api/v2/contracts/search")
     summary("Search contracts, order by dependants count desc")
     produces("application/json")
     tag("Search")

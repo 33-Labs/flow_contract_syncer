@@ -8,7 +8,7 @@ defmodule FlowContractSyncerWeb.V2.SnippetSearchController do
   alias FlowContractSyncer.Schema.{Network, NetworkState, Snippet}
 
   swagger_path :search do
-    get("/api/v1/snippets/search")
+    get("/api/v2/snippets/search")
     summary("Search snippets")
     produces("application/json")
     tag("Search")
