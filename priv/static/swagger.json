@@ -494,7 +494,7 @@
         "operationId": "search_contract",
         "parameters": [
           {
-            "description": "Keyword for searching, case-insensitive",
+            "description": "Keyword for searching, case-sensitive",
             "in": "query",
             "name": "keyword",
             "required": true,
@@ -642,10 +642,11 @@
           },
           {
             "default": "address",
-            "description": "Should be one of address, name, default is address",
+            "description": "Should be one of address, name, dependants_count, default is dependants_count",
             "enum": [
               "address",
-              "name"
+              "name",
+              "dependants_count"
             ],
             "in": "query",
             "name": "order_by",
@@ -737,10 +738,11 @@
           },
           {
             "default": "address",
-            "description": "Should be one of address, name, default is address",
+            "description": "Should be one of address, name, dependants_count, default is dependants_count",
             "enum": [
               "address",
-              "name"
+              "name",
+              "dependants_count"
             ],
             "in": "query",
             "name": "order_by",

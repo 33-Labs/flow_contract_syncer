@@ -87,6 +87,27 @@ defmodule FlowContractSyncer.Schema.Contract do
     end)
   end
 
+  def dependencies(%__MODULE__{id: contract_id, network_id: network_id}, :dependants_count, direction, offset, limit)
+    when is_integer(offset) and is_integer(limit) do
+    direction = String.to_atom(direction)
+    dependants = group_by_dependants()
+    dependencies = group_by_dependencies()
+
+    query =
+      from c in __MODULE__,
+        left_join: d in subquery(dependants),
+        on: d.dependency_id == c.id,
+        join: ddd in Dependency,
+        on: c.id == ddd.dependency_id and ddd.contract_id == ^contract_id,
+        where: c.network_id == ^network_id, 
+        order_by: [{^direction, coalesce(d.count, 0)}],
+        offset: ^offset,
+        limit: ^limit,
+        select: %{uuid: c.uuid}
+
+      query |> Repo.all() |> Enum.map(& &1.uuid)
+  end
+
   def dependencies(%__MODULE__{id: contract_id}, order_by, direction, offset, limit)
       when is_integer(offset) and is_integer(limit) and order_by in [:name, :address] do
     direction = String.to_atom(direction)
@@ -101,6 +122,27 @@ defmodule FlowContractSyncer.Schema.Contract do
     |> select([:uuid])
     |> Repo.all()
     |> Enum.map(& &1.uuid)
+  end
+
+  def dependants(%__MODULE__{id: contract_id, network_id: network_id}, :dependants_count, direction, offset, limit)
+    when is_integer(offset) and is_integer(limit) do
+    direction = String.to_atom(direction)
+    dependants = group_by_dependants()
+    dependencies = group_by_dependencies()
+
+    query =
+      from c in __MODULE__,
+        left_join: d in subquery(dependants),
+        on: d.dependency_id == c.id,
+        join: ddd in Dependency,
+        on: c.id == ddd.contract_id and ddd.dependency_id == ^contract_id,
+        where: c.network_id == ^network_id, 
+        order_by: [{^direction, coalesce(d.count, 0)}],
+        offset: ^offset,
+        limit: ^limit,
+        select: %{uuid: c.uuid}
+
+      query |> Repo.all() |> Enum.map(& &1.uuid)
   end
 
   def dependants(%__MODULE__{id: contract_id}, order_by, direction, offset, limit)

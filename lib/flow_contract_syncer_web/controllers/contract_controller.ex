@@ -325,8 +325,8 @@ defmodule FlowContractSyncerWeb.ContractController do
     parameters do
       uuid(:path, :string, "Contract uuid", required: true, example: "A.0b2a3299cc857e29.TopShot")
 
-      order_by(:query, :string, "Should be one of address, name, default is address",
-        enum: [:address, :name],
+      order_by(:query, :string, "Should be one of address, name, dependants_count, default is dependants_count",
+        enum: [:address, :name, :dependants_count],
         default: :address
       )
 
@@ -355,7 +355,7 @@ defmodule FlowContractSyncerWeb.ContractController do
   def dependencies_params_schema,
     do: %{
       uuid: [type: :string, required: true, cast_func: &uuid_cast_func/1],
-      order_by: [type: :string, in: ["address", "name"], default: "address"],
+      order_by: [type: :string, in: ["address", "name", "dependants_count"], default: "dependants_count"],
       order_by_direction: [type: :string, in: ["desc", "asc"], default: "desc"],
       offset: [type: :integer, number: [min: 0], default: 0],
       limit: [type: :integer, number: [min: 1, max: 500], default: 200],
@@ -413,8 +413,8 @@ defmodule FlowContractSyncerWeb.ContractController do
     parameters do
       uuid(:path, :string, "Contract uuid", required: true, example: "A.0b2a3299cc857e29.TopShot")
 
-      order_by(:query, :string, "Should be one of address, name, default is address",
-        enum: [:address, :name],
+      order_by(:query, :string, "Should be one of address, name, dependants_count, default is dependants_count",
+        enum: [:address, :name, :dependants_count],
         default: :address
       )
 
@@ -443,7 +443,7 @@ defmodule FlowContractSyncerWeb.ContractController do
   def dependants_params_schema,
     do: %{
       uuid: [type: :string, required: true, cast_func: &uuid_cast_func/1],
-      order_by: [type: :string, in: ["address", "name"], default: "address"],
+      order_by: [type: :string, in: ["address", "name", "dependants_count"], default: "dependants_count"],
       order_by_direction: [type: :string, in: ["desc", "asc"], default: "desc"],
       offset: [type: :integer, number: [min: 0], default: 0],
       limit: [type: :integer, number: [min: 1, max: 500], default: 200],
