@@ -47,6 +47,7 @@ defmodule FlowContractSyncer.Schema.ContractEvent do
     |> validate_required(@required_fields)
     |> validate_length(:address, is: 18)
     |> unique_constraint([:network_id, :digest], name: :events_network_id_digest_index)
+    |> unique_constraint([:id], name: :contract_events_pkey)
   end
 
   # raw event:
