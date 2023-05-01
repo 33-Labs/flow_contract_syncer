@@ -26,10 +26,7 @@ defmodule FlowContractSyncer.Schema.NetworkState do
 
   def inc_contract_search_count(%__MODULE__{id: network_id}) do
     Repo.transaction(fn ->
-      state =
-        __MODULE__
-        |> where(network_id: ^network_id)
-        |> Repo.one()
+      state = get_by_network_id(network_id)
 
       state
       |> changeset(%{contract_search_count: state.contract_search_count + 1})
