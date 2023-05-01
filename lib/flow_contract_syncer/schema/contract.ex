@@ -566,10 +566,18 @@ defmodule FlowContractSyncer.Schema.Contract do
   # Should delete all the comments before run the regex
   # Or some unexisted contracts will be involved in
   # e.g. https://flow-view-source.com/mainnet/account/0x82eafacd9c87f83a/contract/Profile
+  def remove_comments(nil) do
+    nil
+  end
+
   def remove_comments(code) do
     regex = ~r/\/\*([\s\S]*?)\*\//
 
     Regex.replace(regex, code, "")
+  end
+
+  defp do_extract_imports(nil) do
+    []
   end
 
   defp do_extract_imports(code) do

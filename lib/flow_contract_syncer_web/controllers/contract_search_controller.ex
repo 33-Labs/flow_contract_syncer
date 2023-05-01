@@ -24,7 +24,7 @@ defmodule FlowContractSyncerWeb.ContractSearchController do
 
       network(:query, :string, "Flow network, default value is \"mainnet\"",
         required: false,
-        enum: [:mainnet]
+        enum: [:mainnet, :testnet]
       )
 
       scope(
@@ -47,7 +47,7 @@ defmodule FlowContractSyncerWeb.ContractSearchController do
 
   @search_params_schema %{
     keyword: [type: :string, required: true, length: [min: 3]],
-    network: [type: :string, in: ["mainnet"], default: "mainnet"],
+    network: [type: :string, in: ["mainnet", "testnet"], default: "mainnet"],
     scope: [type: :string, in: ["code", "uuid", "uuid,code", "code,uuid"], default: "uuid,code"],
     offset: [type: :integer, number: [min: 0], default: 0],
     limit: [type: :integer, number: [min: 1, max: 500], default: 200]

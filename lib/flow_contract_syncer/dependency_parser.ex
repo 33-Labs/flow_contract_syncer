@@ -29,7 +29,7 @@ defmodule FlowContractSyncer.DependencyParser do
 
         error ->
           Logger.error(
-            "[#{__MODULE__}] failed to parse deps for contract: #{contract.id}. error: #{inspect(error)}"
+            "[#{__MODULE__}_#{network.name}] failed to parse deps for contract: #{contract.id}. error: #{inspect(error)}"
           )
 
           {:error, :parse_failed}

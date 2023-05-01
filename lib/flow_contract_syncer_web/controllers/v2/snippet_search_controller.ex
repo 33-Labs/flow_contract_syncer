@@ -24,7 +24,7 @@ defmodule FlowContractSyncerWeb.V2.SnippetSearchController do
 
       network(:query, :string, "Flow network, default value is \"mainnet\"",
         required: false,
-        enum: [:mainnet]
+        enum: [:mainnet, :testnet]
       )
 
       type(
@@ -47,7 +47,7 @@ defmodule FlowContractSyncerWeb.V2.SnippetSearchController do
 
   @search_params_schema %{
     keyword: [type: :string, required: true, length: [min: 3]],
-    network: [type: :string, in: ["mainnet"], default: "mainnet"],
+    network: [type: :string, in: ["mainnet", "testnet"], default: "mainnet"],
     type: [
       type: :string,
       in: [

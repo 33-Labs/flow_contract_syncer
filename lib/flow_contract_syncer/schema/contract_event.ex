@@ -104,7 +104,7 @@ defmodule FlowContractSyncer.Schema.ContractEvent do
 
   def new(event, block_height, %Network{name: name}) do
     Logger.error(
-      "[#{__MODULE__}] Unknown event detected: #{inspect(event)} at height: #{block_height} on #{name}"
+      "[#{__MODULE__}_#{name}] Unknown event detected: #{inspect(event)} at height: #{block_height} on #{name}"
     )
 
     {:error, :unknown_event}

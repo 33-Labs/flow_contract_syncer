@@ -40,7 +40,7 @@ defmodule FlowContractSyncerWeb.V2.ContractController do
 
       network(:query, :string, "Flow network, default value is \"mainnet\"",
         required: false,
-        enum: [:mainnet]
+        enum: [:mainnet, :testnet]
       )
     end
 
@@ -59,7 +59,7 @@ defmodule FlowContractSyncerWeb.V2.ContractController do
       order_by_direction: [type: :string, in: ["desc", "asc"], default: "desc"],
       offset: [type: :integer, number: [min: 0], default: 0],
       limit: [type: :integer, number: [min: 1, max: 500], default: 200],
-      network: [type: :string, in: ["mainnet"], default: "mainnet"]
+      network: [type: :string, in: ["mainnet", "testnet"], default: "mainnet"]
     }
 
   def index(conn, params) do
@@ -114,7 +114,7 @@ defmodule FlowContractSyncerWeb.V2.ContractController do
 
       network(:query, :string, "Flow network, default value is \"mainnet\"",
         required: false,
-        enum: [:mainnet]
+        enum: [:mainnet, :testnet]
       )
     end
 
@@ -139,7 +139,7 @@ defmodule FlowContractSyncerWeb.V2.ContractController do
         ],
         default: "all"
       ],
-      network: [type: :string, in: ["mainnet"], default: "mainnet"]
+      network: [type: :string, in: ["mainnet", "testnet"], default: "mainnet"]
     }
 
   def snippets(conn, params) do
@@ -190,7 +190,7 @@ defmodule FlowContractSyncerWeb.V2.ContractController do
 
       network(:query, :string, "Flow network, default value is \"mainnet\"",
         required: false,
-        enum: [:mainnet]
+        enum: [:mainnet, :testnet]
       )
     end
 
@@ -202,7 +202,7 @@ defmodule FlowContractSyncerWeb.V2.ContractController do
   def deployments_params_schema,
     do: %{
       uuid: [type: :string, required: true, cast_func: &uuid_cast_func/1],
-      network: [type: :string, in: ["mainnet"], default: "mainnet"]
+      network: [type: :string, in: ["mainnet", "testnet"], default: "mainnet"]
     }
 
   def deployments(conn, params) do
@@ -265,7 +265,7 @@ defmodule FlowContractSyncerWeb.V2.ContractController do
 
       network(:query, :string, "Flow network, default value is \"mainnet\"",
         required: false,
-        enum: [:mainnet]
+        enum: [:mainnet, :testnet]
       )
     end
 
@@ -285,7 +285,7 @@ defmodule FlowContractSyncerWeb.V2.ContractController do
       order_by_direction: [type: :string, in: ["desc", "asc"], default: "desc"],
       offset: [type: :integer, number: [min: 0], default: 0],
       limit: [type: :integer, number: [min: 1, max: 500], default: 200],
-      network: [type: :string, in: ["mainnet"], default: "mainnet"]
+      network: [type: :string, in: ["mainnet", "testnet"], default: "mainnet"]
     }
 
   def dependencies(conn, params) do
@@ -360,7 +360,7 @@ defmodule FlowContractSyncerWeb.V2.ContractController do
 
       network(:query, :string, "Flow network, default value is \"mainnet\"",
         required: false,
-        enum: [:mainnet]
+        enum: [:mainnet, :testnet]
       )
     end
 
@@ -380,7 +380,7 @@ defmodule FlowContractSyncerWeb.V2.ContractController do
       order_by_direction: [type: :string, in: ["desc", "asc"], default: "desc"],
       offset: [type: :integer, number: [min: 0], default: 0],
       limit: [type: :integer, number: [min: 1, max: 500], default: 200],
-      network: [type: :string, in: ["mainnet"], default: "mainnet"]
+      network: [type: :string, in: ["mainnet", "testnet"], default: "mainnet"]
     }
 
   def dependants(conn, params) do

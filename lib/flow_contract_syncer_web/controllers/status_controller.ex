@@ -19,7 +19,7 @@ defmodule FlowContractSyncerWeb.StatusController do
     parameters do
       network(:query, :string, "Flow network, default value is \"mainnet\"",
         required: false,
-        enum: [:mainnet]
+        enum: [:mainnet, :testnet]
       )
     end
 
@@ -28,7 +28,7 @@ defmodule FlowContractSyncerWeb.StatusController do
   end
 
   @show_params_schema %{
-    network: [type: :string, in: ["mainnet"], default: "mainnet"]
+    network: [type: :string, in: ["mainnet", "testnet"], default: "mainnet"]
   }
 
   def show(conn, params) do

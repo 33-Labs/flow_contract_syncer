@@ -18,12 +18,23 @@ defmodule FlowContractSyncer.ContractSyncerSupervisor do
   end
 
   def init(network) do
-    children = [
-      {ContractEventSyncer, network},
-      {ContractSyncer, network},
-      {DependencyParser, network},
-      {SnippetParser, network}
-    ]
+    children =
+      case network.name do
+        "mainnet" ->
+          [
+            {ContractEventSyncer, network},
+            {ContractSyncer, network},
+            {DependencyParser, network},
+            {SnippetParser, network}
+          ]
+
+        _otherwise ->
+          [
+            {ContractEventSyncer, network},
+            {ContractSyncer, network},
+            {DependencyParser, network}
+          ]
+      end
 
     Supervisor.init(children, strategy: :one_for_one)
   end

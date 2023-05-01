@@ -31,7 +31,7 @@ defmodule FlowContractSyncer.ContractSyncer do
 
         error ->
           Logger.error(
-            "[#{__MODULE__}] failed to sync contract for event: #{event.id}. error: #{inspect(error)}"
+            "[#{__MODULE__}_#{network.name}] failed to sync contract for event: #{event.id}. error: #{inspect(error)}"
           )
 
           {:error, :sync_failed}
@@ -130,7 +130,10 @@ defmodule FlowContractSyncer.ContractSyncer do
           contract
 
         error ->
-          Logger.error("[#{__MODULE__}] insert contract failed, error: #{inspect(error)}")
+          Logger.error(
+            "[#{__MODULE__}_network_#{network_id}] insert contract failed, error: #{inspect(error)}"
+          )
+
           Repo.rollback(:insert_contract_failed)
       end
     end)

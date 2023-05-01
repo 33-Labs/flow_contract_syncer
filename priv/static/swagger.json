@@ -503,7 +503,8 @@
           {
             "description": "Flow network, default value is \"mainnet\"",
             "enum": [
-              "mainnet"
+              "mainnet",
+              "testnet"
             ],
             "in": "query",
             "name": "network",
@@ -555,7 +556,8 @@
           {
             "description": "Flow network, default value is \"mainnet\"",
             "enum": [
-              "mainnet"
+              "mainnet",
+              "testnet"
             ],
             "in": "query",
             "name": "network",
@@ -628,7 +630,8 @@
           {
             "description": "Flow network, default value is \"mainnet\"",
             "enum": [
-              "mainnet"
+              "mainnet",
+              "testnet"
             ],
             "in": "query",
             "name": "network",
@@ -732,7 +735,8 @@
           {
             "description": "Flow network, default value is \"mainnet\"",
             "enum": [
-              "mainnet"
+              "mainnet",
+              "testnet"
             ],
             "in": "query",
             "name": "network",
@@ -828,7 +832,8 @@
           {
             "description": "Flow network, default value is \"mainnet\"",
             "enum": [
-              "mainnet"
+              "mainnet",
+              "testnet"
             ],
             "in": "query",
             "name": "network",
@@ -886,7 +891,8 @@
           {
             "description": "Flow network, default value is \"mainnet\"",
             "enum": [
-              "mainnet"
+              "mainnet",
+              "testnet"
             ],
             "in": "query",
             "name": "network",
@@ -961,7 +967,8 @@
           {
             "description": "Flow network, default value is \"mainnet\"",
             "enum": [
-              "mainnet"
+              "mainnet",
+              "testnet"
             ],
             "in": "query",
             "name": "network",
@@ -1019,7 +1026,8 @@
           {
             "description": "Flow network, default value is \"mainnet\"",
             "enum": [
-              "mainnet"
+              "mainnet",
+              "testnet"
             ],
             "in": "query",
             "name": "network",
@@ -1092,7 +1100,8 @@
           {
             "description": "Flow network, default value is \"mainnet\"",
             "enum": [
-              "mainnet"
+              "mainnet",
+              "testnet"
             ],
             "in": "query",
             "name": "network",
@@ -1150,7 +1159,8 @@
           {
             "description": "Flow network, default value is \"mainnet\"",
             "enum": [
-              "mainnet"
+              "mainnet",
+              "testnet"
             ],
             "in": "query",
             "name": "network",
@@ -1214,7 +1224,8 @@
           {
             "description": "Flow network, default value is \"mainnet\"",
             "enum": [
-              "mainnet"
+              "mainnet",
+              "testnet"
             ],
             "in": "query",
             "name": "network",
@@ -1303,7 +1314,8 @@
           {
             "description": "Flow network, default value is \"mainnet\"",
             "enum": [
-              "mainnet"
+              "mainnet",
+              "testnet"
             ],
             "in": "query",
             "name": "network",
@@ -1355,7 +1367,8 @@
           {
             "description": "Flow network, default value is \"mainnet\"",
             "enum": [
-              "mainnet"
+              "mainnet",
+              "testnet"
             ],
             "in": "query",
             "name": "network",
@@ -1428,7 +1441,8 @@
           {
             "description": "Flow network, default value is \"mainnet\"",
             "enum": [
-              "mainnet"
+              "mainnet",
+              "testnet"
             ],
             "in": "query",
             "name": "network",
@@ -1501,7 +1515,8 @@
           {
             "description": "Flow network, default value is \"mainnet\"",
             "enum": [
-              "mainnet"
+              "mainnet",
+              "testnet"
             ],
             "in": "query",
             "name": "network",

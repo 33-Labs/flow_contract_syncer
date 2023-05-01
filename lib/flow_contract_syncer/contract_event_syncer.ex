@@ -68,7 +68,7 @@ defmodule FlowContractSyncer.ContractEventSyncer do
     else
       otherwise ->
         # If there is an error, we sleep and retry
-        Logger.error("[#{__MODULE__}] event fetch failed: #{inspect(otherwise)}")
+        Logger.error("[#{__MODULE__}_#{network.name}] event fetch failed: #{inspect(otherwise)}")
         Process.sleep(@sleep_interval)
         do_event_sync(network, synced_height, latest_height)
     end

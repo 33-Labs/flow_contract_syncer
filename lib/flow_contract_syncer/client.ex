@@ -86,6 +86,19 @@ defmodule FlowContractSyncer.Client do
     |> handle_response()
   end
 
+  def get_block_by_height(%Network{} = network, height) do
+    endpoint = network.endpoint |> Path.join("blocks")
+
+    query = %{"height" => height}
+    encoded_query = URI.encode_query(query, :rfc3986)
+
+    url = "#{endpoint}?#{encoded_query}"
+
+    Finch.build(:get, url, [{"Content-Type", "application/json"}])
+    |> Finch.request(MyFinch)
+    |> handle_response()
+  end
+
   defp handle_response({:ok, %{status: 200, body: body}}) do
     case Jason.decode(body) do
       {:ok, content} ->

@@ -24,7 +24,7 @@ defmodule FlowContractSyncerWeb.V2.SnippetController do
 
       network(:query, :string, "Flow network, default value is \"mainnet\"",
         required: false,
-        enum: [:mainnet]
+        enum: [:mainnet, :testnet]
       )
 
       offset(:query, :integer, "Should be greater than 0, default value is 0", required: false)
@@ -42,7 +42,7 @@ defmodule FlowContractSyncerWeb.V2.SnippetController do
   defp contracts_params_schema,
     do: %{
       code_hash: [type: :string, required: true, cast_func: &code_hash_cast_func/1],
-      network: [type: :string, in: ["mainnet"], default: "mainnet"],
+      network: [type: :string, in: ["mainnet", "testnet"], default: "mainnet"],
       offset: [type: :integer, number: [min: 0], default: 0],
       limit: [type: :integer, number: [min: 1, max: 500], default: 200]
     }

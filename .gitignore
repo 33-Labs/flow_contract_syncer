@@ -33,5 +33,6 @@ npm-debug.log
 /assets/node_modules/
 
 contracts.csv
+contracts-testnet.csv
 events.csv
 events_test.csv

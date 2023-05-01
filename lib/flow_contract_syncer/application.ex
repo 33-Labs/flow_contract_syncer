@@ -48,8 +48,18 @@ defmodule FlowContractSyncer.Application do
   defp start_contract_syncer_sup(network) do
     Supervisor.start_child(
       FlowContractSyncer.Supervisor,
-      {FlowContractSyncer.ContractSyncerSupervisor, network}
+      child_spec(
+        FlowContractSyncer.ContractSyncerSupervisor,
+        [network],
+        id: :"#{network.name}_sup"
+      )
     )
+  end
+
+  def child_spec(mod, args, opts \\ []) do
+    opts = opts |> Enum.into(%{})
+    start = {mod, :start_link, args}
+    %{start: start, id: mod} |> Map.merge(opts)
   end
 
   # Tell Phoenix to update the endpoint configuration
