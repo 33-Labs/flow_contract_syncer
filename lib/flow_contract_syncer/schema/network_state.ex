@@ -24,7 +24,7 @@ defmodule FlowContractSyncer.Schema.NetworkState do
     |> unique_constraint([:network_id], name: :network_states_network_id_index)
   end
 
-  def inc_contract_search_count(%__MODULE__{id: network_id}) do
+  def inc_contract_search_count(%__MODULE__{network_id: network_id}) do
     Repo.transaction(fn ->
       state = get_by_network_id(network_id)
 
@@ -34,7 +34,7 @@ defmodule FlowContractSyncer.Schema.NetworkState do
     end)
   end
 
-  def inc_snippet_search_count(%__MODULE__{id: network_id}) do
+  def inc_snippet_search_count(%__MODULE__{network_id: network_id}) do
     Repo.transaction(fn ->
       state =
         __MODULE__
