@@ -101,7 +101,13 @@ defmodule FlowContractSyncer.ContractEventSyncer do
       true ->
         events =
           result
-          |> Enum.flat_map(fn {:ok, {:ok, blocks_with_events}} -> blocks_with_events end)
+          |> Enum.flat_map(fn {:ok, {:ok, blocks}} ->
+            blocks
+            |> Enum.filter(fn
+              %{"events" => _events} -> true
+              _otherwise -> false
+            end)
+          end)
           |> extract_events()
 
         {:ok, events}
