@@ -339,7 +339,7 @@ defmodule FlowContractSyncer.Schema.Contract do
 
     query =
       from [c, d, dd] in query,
-        order_by: [desc: coalesce(d.count, 0)],
+        order_by: [desc: fragment("? ilike ?", c.uuid, ^search_term), desc: coalesce(d.count, 0)],
         offset: ^offset,
         limit: ^limit,
         select: %{
