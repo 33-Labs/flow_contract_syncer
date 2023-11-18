@@ -342,6 +342,7 @@
       "description": "Network status",
       "example": {
         "contract_amount": 2437,
+        "contract_search_count": 100,
         "last_sync_at": "2022-12-05T02:54:46",
         "network": "mainnet",
         "synced_height": 42168691
@@ -349,6 +350,10 @@
       "properties": {
         "contract_amount": {
           "description": "Contracts amount synced",
+          "type": "integer"
+        },
+        "contract_search_count": {
+          "description": "The times of contract searched",
           "type": "integer"
         },
         "last_sync_at": {
@@ -365,6 +370,7 @@
         }
       },
       "required": [
+        "contract_search_count",
         "synced_height",
         "network",
         "last_sync_at",
@@ -1569,6 +1575,51 @@
         "summary": "Query the contracts using specific snippet",
         "tags": [
           "Snippets"
+        ]
+      }
+    },
+    "/api/v2/status": {
+      "get": {
+        "description": "",
+        "operationId": "get_network_status",
+        "parameters": [
+          {
+            "description": "Flow network, default value is \"mainnet\"",
+            "enum": [
+              "mainnet",
+              "testnet"
+            ],
+            "in": "query",
+            "name": "network",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/StatusResp"
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "schema": {
+              "$ref": "#/definitions/ErrorResp"
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "summary": "Network status",
+        "tags": [
+          "Status"
         ]
       }
     }

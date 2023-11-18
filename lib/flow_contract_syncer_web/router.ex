@@ -43,6 +43,8 @@ defmodule FlowContractSyncerWeb.Router do
   scope "/api/v2", FlowContractSyncerWeb.V2 do
     pipe_through [:api, :authenticate_api_user]
 
+    get("/status", StatusController, :show)
+
     get("/contracts/search", ContractSearchController, :search)
     get("/contracts", ContractController, :index)
     get("/contracts/:uuid/snippets", ContractController, :snippets)
