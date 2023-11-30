@@ -36,6 +36,8 @@ defmodule FlowContractSyncer.Schema.Contract do
     timestamps()
   end
 
+  @query_timeout 20000
+
   @required_fields ~w(network_id uuid address name status deps_parsed snippet_parsed)a
   @optional_fields ~w(code_hash code)a
   def changeset(struct, params \\ %{}) do
@@ -359,13 +361,13 @@ defmodule FlowContractSyncer.Schema.Contract do
               dependencies_count: coalesce(dd.count, 0)
             }
 
-        Repo.all(query, timeout: 20000)
+        Repo.all(query, timeout: @query_timeout)
       end)
 
-    count = Task.await(count_task, 20000)
+    count = Task.await(count_task, @query_timeout)
     Logger.info("[#{__MODULE__}] search count: #{count}")
 
-    contracts = Task.await(contracts_task, 20000)
+    contracts = Task.await(contracts_task, @query_timeout)
     Logger.info("[#{__MODULE__}] search contracts")
 
     %{count: count, contracts: contracts}
@@ -387,23 +389,32 @@ defmodule FlowContractSyncer.Schema.Contract do
 
     query = filter_by_owner(query, owner)
 
-    count =
-      from(c in query, select: count(c.id))
-      |> Repo.one()
+    count_task =
+      Task.async(fn ->
+        from(c in query, select: count(c.id))
+        |> Repo.one()
+      end)
 
-    contracts =
-      from [c, d, dd] in query,
-        order_by: [{^direction, c.inserted_at}],
-        offset: ^offset,
-        limit: ^limit,
-        select: %{
-          uuid: c.uuid,
-          dependants_count: coalesce(d.count, 0),
-          dependencies_count: coalesce(dd.count, 0)
-        }
+    contracts_task =
+      Task.async(fn ->
+        query =
+          from [c, d, dd] in query,
+            order_by: [{^direction, c.inserted_at}],
+            offset: ^offset,
+            limit: ^limit,
+            select: %{
+              uuid: c.uuid,
+              dependants_count: coalesce(d.count, 0),
+              dependencies_count: coalesce(dd.count, 0)
+            }
 
-    result = contracts |> Repo.all()
-    %{count: count, contracts: result}
+        Repo.all(query, timeout: @query_timeout)
+      end)
+
+    count = Task.await(count_task, @query_timeout)
+    contracts = Task.await(contracts_task, @query_timeout)
+
+    %{count: count, contracts: contracts}
   end
 
   def order_by(:dependants_count, %Network{id: network_id}, owner, direction, offset, limit)
@@ -427,23 +438,31 @@ defmodule FlowContractSyncer.Schema.Contract do
 
     query = filter_by_owner(query, owner)
 
-    count =
-      from(c in query, select: count(c.id))
-      |> Repo.one()
+    count_task =
+      Task.async(fn ->
+        from(c in query, select: count(c.id))
+        |> Repo.one()
+      end)
 
-    contracts =
-      from [c, d, dd] in query,
-        order_by: [{^direction, coalesce(d.count, 0)}],
-        offset: ^offset,
-        limit: ^limit,
-        select: %{
-          uuid: c.uuid,
-          dependants_count: coalesce(d.count, 0),
-          dependencies_count: coalesce(dd.count, 0)
-        }
+    contracts_task =
+      Task.async(fn ->
+        query =
+          from [c, d, dd] in query,
+            order_by: [{^direction, coalesce(d.count, 0)}],
+            offset: ^offset,
+            limit: ^limit,
+            select: %{
+              uuid: c.uuid,
+              dependants_count: coalesce(d.count, 0),
+              dependencies_count: coalesce(dd.count, 0)
+            }
 
-    result = contracts |> Repo.all()
-    %{count: count, contracts: result}
+        Repo.all(query, timeout: @query_timeout)
+      end)
+
+    count = Task.await(count_task, @query_timeout)
+    contracts = Task.await(contracts_task, @query_timeout)
+    %{count: count, contracts: contracts}
   end
 
   def order_by(:dependencies_count, %Network{id: network_id}, owner, direction, offset, limit)
@@ -467,23 +486,31 @@ defmodule FlowContractSyncer.Schema.Contract do
 
     query = filter_by_owner(query, owner)
 
-    count =
-      from(c in query, select: count(c.id))
-      |> Repo.one()
+    count_task =
+      Task.async(fn ->
+        from(c in query, select: count(c.id))
+        |> Repo.one()
+      end)
 
-    contracts =
-      from [c, d, dd] in query,
-        order_by: [{^direction, coalesce(d.count, 0)}],
-        offset: ^offset,
-        limit: ^limit,
-        select: %{
-          uuid: c.uuid,
-          dependants_count: coalesce(dd.count, 0),
-          dependencies_count: coalesce(d.count, 0)
-        }
+    contracts_task =
+      Task.async(fn ->
+        query =
+          from [c, d, dd] in query,
+            order_by: [{^direction, coalesce(d.count, 0)}],
+            offset: ^offset,
+            limit: ^limit,
+            select: %{
+              uuid: c.uuid,
+              dependants_count: coalesce(dd.count, 0),
+              dependencies_count: coalesce(d.count, 0)
+            }
 
-    result = contracts |> Repo.all()
-    %{count: count, contracts: result}
+        Repo.all(query, timeout: @query_timeout)
+      end)
+
+    count = Task.await(count_task, @query_timeout)
+    contracts = Task.await(contracts_task, @query_timeout)
+    %{count: count, contracts: contracts}
   end
 
   def extract_snippets(%__MODULE__{code: contract_code}) do
