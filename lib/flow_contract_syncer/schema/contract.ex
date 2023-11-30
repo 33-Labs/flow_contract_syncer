@@ -337,24 +337,35 @@ defmodule FlowContractSyncer.Schema.Contract do
                 (ilike(c.code, ^search_term) or ilike(c.uuid, ^search_term))
       end
 
-    count =
-      from(c in query, select: count(c.id))
-      |> Repo.one()
+    count_task =
+      Task.async(fn ->
+        from(c in query, select: count(c.id))
+        |> Repo.one()
+      end)
 
+    contracts_task =
+      Task.async(fn ->
+        query =
+          from [c, d, dd] in query,
+            order_by: [
+              desc: fragment("? ilike ?", c.uuid, ^search_term),
+              desc: coalesce(d.count, 0)
+            ],
+            offset: ^offset,
+            limit: ^limit,
+            select: %{
+              uuid: c.uuid,
+              dependants_count: coalesce(d.count, 0),
+              dependencies_count: coalesce(dd.count, 0)
+            }
+
+        Repo.all(query, timeout: 20000)
+      end)
+
+    count = Task.await(count_task)
     Logger.info("[#{__MODULE__}] search count: #{count}")
 
-    query =
-      from [c, d, dd] in query,
-        order_by: [desc: fragment("? ilike ?", c.uuid, ^search_term), desc: coalesce(d.count, 0)],
-        offset: ^offset,
-        limit: ^limit,
-        select: %{
-          uuid: c.uuid,
-          dependants_count: coalesce(d.count, 0),
-          dependencies_count: coalesce(dd.count, 0)
-        }
-
-    contracts = Repo.all(query)
+    contracts = Task.await(contracts_task)
     Logger.info("[#{__MODULE__}] search contracts")
 
     %{count: count, contracts: contracts}
