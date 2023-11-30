@@ -362,10 +362,10 @@ defmodule FlowContractSyncer.Schema.Contract do
         Repo.all(query, timeout: 20000)
       end)
 
-    count = Task.await(count_task)
+    count = Task.await(count_task, 20000)
     Logger.info("[#{__MODULE__}] search count: #{count}")
 
-    contracts = Task.await(contracts_task)
+    contracts = Task.await(contracts_task, 20000)
     Logger.info("[#{__MODULE__}] search contracts")
 
     %{count: count, contracts: contracts}
