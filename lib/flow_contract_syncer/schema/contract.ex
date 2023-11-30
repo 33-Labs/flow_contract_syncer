@@ -2,6 +2,8 @@ defmodule FlowContractSyncer.Schema.Contract do
   @moduledoc false
 
   use Ecto.Schema
+  require Logger
+
   import Ecto.{Changeset, Query}
 
   alias FlowContractSyncer.{Repo, Utils}
@@ -306,6 +308,8 @@ defmodule FlowContractSyncer.Schema.Contract do
                "uuid,code",
                "code,uuid"
              ] and is_integer(offset) and is_integer(limit) do
+    Logger.info("[#{__MODULE__}] search keyword: #{keyword}, scope: #{scope}")
+
     dependants = group_by_dependants()
     dependencies = group_by_dependencies()
 
@@ -337,6 +341,8 @@ defmodule FlowContractSyncer.Schema.Contract do
       from(c in query, select: count(c.id))
       |> Repo.one()
 
+    Logger.info("[#{__MODULE__}] search count: #{count}")
+
     query =
       from [c, d, dd] in query,
         order_by: [desc: fragment("? ilike ?", c.uuid, ^search_term), desc: coalesce(d.count, 0)],
@@ -348,7 +354,10 @@ defmodule FlowContractSyncer.Schema.Contract do
           dependencies_count: coalesce(dd.count, 0)
         }
 
-    %{count: count, contracts: Repo.all(query)}
+    contracts = Repo.all(query)
+    Logger.info("[#{__MODULE__}] search contracts")
+
+    %{count: count, contracts: contracts}
   end
 
   def order_by(:inserted_at, %Network{id: network_id}, owner, direction, offset, limit)
