@@ -41,7 +41,7 @@ defmodule FlowContractSyncerWeb.ContractController do
     do: %{
       uuid: [type: :string, required: true, cast_func: &uuid_cast_func/1],
       network: [type: :string, in: ["mainnet", "testnet"], default: "mainnet"],
-      sync: [type: :boolean, default: false]
+      sync: [type: :boolean, default: true]
     }
 
   def show(conn, params) do

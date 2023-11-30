@@ -265,22 +265,32 @@ defmodule FlowContractSyncer.Schema.Contract do
         join: cs in ContractSnippet,
         on: c.id == cs.contract_id and cs.snippet_id == ^snippet_id
 
-    count =
-      from(c in query, select: count(c.id))
-      |> Repo.one()
+    count_task =
+      Task.async(fn ->
+        from(c in query, select: count(c.id))
+        |> Repo.one()
+      end)
 
-    query =
-      from [c, d, dd, _cs] in query,
-        order_by: [desc: coalesce(d.count, 0)],
-        offset: ^offset,
-        limit: ^limit,
-        select: %{
-          uuid: c.uuid,
-          dependants_count: coalesce(d.count, 0),
-          dependencies_count: coalesce(dd.count, 0)
-        }
+    contracts_task =
+      Task.async(fn ->
+        query =
+          from [c, d, dd, _cs] in query,
+            order_by: [desc: coalesce(d.count, 0)],
+            offset: ^offset,
+            limit: ^limit,
+            select: %{
+              uuid: c.uuid,
+              dependants_count: coalesce(d.count, 0),
+              dependencies_count: coalesce(dd.count, 0)
+            }
 
-    %{count: count, contracts: Repo.all(query)}
+        Repo.all(query, timeout: @query_timeout)
+      end)
+
+    count = Task.await(count_task, @query_timeout)
+    contracts = Task.await(contracts_task, @query_timeout)
+
+    %{count: count, contracts: contracts}
   end
 
   def with_deps_uuids(%__MODULE__{} = contract) do
