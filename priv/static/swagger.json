@@ -1,343 +1,16 @@
 {
-  "consumes": [
-    "application/json"
-  ],
+  "info": {
+    "version": "1.0.0",
+    "description": "API Documentation for FlowContractSyncer",
+    "title": "FlowContractSyncer API",
+    "contact": {
+      "name": "lanford33",
+      "email": "lanford33@outlook.com"
+    },
+    "termsOfService": "Open for public"
+  },
+  "host": "localhost:4000",
   "definitions": {
-    "Contract": {
-      "description": "A contract on the network",
-      "example": {
-        "address": "0x0b2a3299cc857e29",
-        "code": "...",
-        "dependants": [
-          "A.c1e4f4f4c4257510.TopShotMarketV3"
-        ],
-        "dependencies": [
-          "A.1d7e57aa55817448.MetadataViews"
-        ],
-        "name": "TopShot",
-        "uuid": "A.0b2a3299cc857e29.TopShot"
-      },
-      "properties": {
-        "address": {
-          "description": "Contract address",
-          "type": "string"
-        },
-        "code": {
-          "description": "Contract code",
-          "type": "string"
-        },
-        "dependants_count": {
-          "description": "The number of contracts which import this contract",
-          "type": "integer"
-        },
-        "dependencies_count": {
-          "description": "The number of contracts imported by this contract",
-          "type": "integer"
-        },
-        "events": {
-          "description": "The events in the contract",
-          "type": "array"
-        },
-        "name": {
-          "description": "Contract name",
-          "type": "string"
-        },
-        "uuid": {
-          "description": "Contract uuid",
-          "type": "string"
-        }
-      },
-      "required": [
-        "events",
-        "dependants_count",
-        "dependencies_count",
-        "code",
-        "name",
-        "address",
-        "uuid"
-      ],
-      "title": "Contract",
-      "type": "object"
-    },
-    "ContractResp": {
-      "description": "Contract resp",
-      "properties": {
-        "code": {
-          "description": "status code",
-          "type": "integer"
-        },
-        "data": {
-          "$ref": "#/definitions/Contract"
-        }
-      },
-      "required": [
-        "code"
-      ],
-      "title": "ContractResp",
-      "type": "object"
-    },
-    "Deployment": {
-      "description": "Deployment",
-      "example": {
-        "block_height": 23227064,
-        "block_timestamp": "2022-01-25T22:34:48.000000",
-        "tx_id": "4a03653ecdb5d8fdf11c9f5a967fa126dba725da11a4d87a5fb805478b23e5ee",
-        "type": "added"
-      },
-      "properties": {
-        "block_height": {
-          "description": "Block height of the deployment",
-          "type": "integer"
-        },
-        "block_timestamp": {
-          "description": "Block timestamp of the deployment",
-          "type": "string"
-        },
-        "tx_id": {
-          "description": "Transaction hash of the deployment",
-          "type": "string"
-        },
-        "type": {
-          "description": "Contract event type",
-          "type": "string"
-        }
-      },
-      "required": [
-        "type",
-        "tx_id",
-        "block_timestamp",
-        "block_height"
-      ],
-      "title": "Deployment",
-      "type": "object"
-    },
-    "Deployments": {
-      "description": "A collection of Deployment",
-      "items": {
-        "$ref": "#/definitions/Deployment"
-      },
-      "title": "Deployments",
-      "type": "array"
-    },
-    "DeploymentsData": {
-      "description": "Deployments data",
-      "properties": {
-        "deployments": {
-          "$ref": "#/definitions/Deployments"
-        },
-        "total_deployments_count": {
-          "description": "snippets count",
-          "type": "integer"
-        }
-      },
-      "required": [
-        "total_deployments_count"
-      ],
-      "title": "DeploymentsData",
-      "type": "object"
-    },
-    "DeploymentsResp": {
-      "description": "Deployments resp",
-      "properties": {
-        "code": {
-          "description": "Status code",
-          "type": "integer"
-        },
-        "data": {
-          "$ref": "#/definitions/DeploymentsData"
-        }
-      },
-      "required": [
-        "code"
-      ],
-      "title": "DeploymentsResp",
-      "type": "object"
-    },
-    "ErrorResp": {
-      "example": {
-        "code": 100,
-        "message": "unsupported"
-      },
-      "properties": {
-        "code": {
-          "description": "Error code",
-          "type": "integer"
-        },
-        "message": {
-          "description": "Error message",
-          "type": "string"
-        }
-      },
-      "required": [
-        "message",
-        "code"
-      ],
-      "type": "object"
-    },
-    "PartialContract": {
-      "description": "Basic info of a contract on the network",
-      "example": {
-        "dependants_count": 10,
-        "dependencies_count": 10,
-        "uuid": "A.0b2a3299cc857e29.TopShot"
-      },
-      "properties": {
-        "dependants_count": {
-          "description": "The amount of contracts which import this contract",
-          "type": "integer"
-        },
-        "dependencies_count": {
-          "description": "The amount of contracts imported by this contract",
-          "type": "integer"
-        },
-        "uuid": {
-          "description": "Contract uuid",
-          "type": "string"
-        }
-      },
-      "required": [
-        "dependants_count",
-        "dependencies_count",
-        "uuid"
-      ],
-      "type": "object"
-    },
-    "PartialContracts": {
-      "description": "A collection of PartialContract",
-      "items": {
-        "$ref": "#/definitions/PartialContract"
-      },
-      "title": "PartialContracts",
-      "type": "array"
-    },
-    "PartialContractsData": {
-      "description": "PartialContracts data",
-      "properties": {
-        "contracts": {
-          "$ref": "#/definitions/PartialContracts"
-        },
-        "total_contracts_count": {
-          "description": "contracts count",
-          "type": "integer"
-        }
-      },
-      "required": [
-        "total_contracts_count"
-      ],
-      "title": "PartialContractsData",
-      "type": "object"
-    },
-    "PartialContractsResp": {
-      "description": "PartialContracts resp",
-      "properties": {
-        "code": {
-          "description": "Status code",
-          "type": "integer"
-        },
-        "data": {
-          "$ref": "#/definitions/PartialContractsData"
-        }
-      },
-      "required": [
-        "code"
-      ],
-      "title": "PartialContractsResp",
-      "type": "object"
-    },
-    "Snippet": {
-      "description": "Snippet",
-      "example": {
-        "code": "pub event TokensDeposited(amount: UFix64, to: Address?)",
-        "code_hash": "DFFEFBF8AEBB86680E0EBABAF266F45B68A28188E3E17E81882465A910F1D80A",
-        "contracts_count": 160,
-        "type": "event"
-      },
-      "properties": {
-        "code": {
-          "description": "Snippet code",
-          "type": "string"
-        },
-        "code_hash": {
-          "description": "Snippet code hash",
-          "type": "string"
-        },
-        "contracts_count": {
-          "description": "Contracts using this snippet",
-          "type": "integer"
-        },
-        "type": {
-          "description": "Snippet type",
-          "type": "string"
-        }
-      },
-      "required": [
-        "type",
-        "contracts_count",
-        "code_hash",
-        "code"
-      ],
-      "title": "Snippet",
-      "type": "object"
-    },
-    "SnippetResp": {
-      "description": "Snippet resp",
-      "properties": {
-        "code": {
-          "description": "Status code",
-          "type": "integer"
-        },
-        "data": {
-          "$ref": "#/definitions/Snippet"
-        }
-      },
-      "required": [
-        "code"
-      ],
-      "title": "SnippetResp",
-      "type": "object"
-    },
-    "Snippets": {
-      "description": "A collection of Snippet",
-      "items": {
-        "$ref": "#/definitions/Snippet"
-      },
-      "title": "Snippets",
-      "type": "array"
-    },
-    "SnippetsData": {
-      "description": "Snippets data",
-      "properties": {
-        "snippets": {
-          "$ref": "#/definitions/Snippets"
-        },
-        "total_snippets_count": {
-          "description": "snippets count",
-          "type": "integer"
-        }
-      },
-      "required": [
-        "total_snippets_count"
-      ],
-      "title": "SnippetsData",
-      "type": "object"
-    },
-    "SnippetsResp": {
-      "description": "Snippets resp",
-      "properties": {
-        "code": {
-          "description": "Status code",
-          "type": "integer"
-        },
-        "data": {
-          "$ref": "#/definitions/SnippetsData"
-        }
-      },
-      "required": [
-        "code"
-      ],
-      "title": "SnippetsResp",
-      "type": "object"
-    },
     "Status": {
       "description": "Network status",
       "example": {
@@ -396,6 +69,222 @@
       "title": "StatusResp",
       "type": "object"
     },
+    "ErrorResp": {
+      "example": {
+        "code": 100,
+        "message": "unsupported"
+      },
+      "properties": {
+        "code": {
+          "description": "Error code",
+          "type": "integer"
+        },
+        "message": {
+          "description": "Error message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "message",
+        "code"
+      ],
+      "type": "object"
+    },
+    "PartialContractsResp": {
+      "description": "PartialContracts resp",
+      "properties": {
+        "code": {
+          "description": "Status code",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/PartialContractsData"
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "title": "PartialContractsResp",
+      "type": "object"
+    },
+    "Contract": {
+      "description": "A contract on the network",
+      "example": {
+        "address": "0x0b2a3299cc857e29",
+        "code": "...",
+        "dependants": [
+          "A.c1e4f4f4c4257510.TopShotMarketV3"
+        ],
+        "dependencies": [
+          "A.1d7e57aa55817448.MetadataViews"
+        ],
+        "name": "TopShot",
+        "uuid": "A.0b2a3299cc857e29.TopShot"
+      },
+      "properties": {
+        "address": {
+          "description": "Contract address",
+          "type": "string"
+        },
+        "code": {
+          "description": "Contract code",
+          "type": "string"
+        },
+        "dependants_count": {
+          "description": "The number of contracts which import this contract",
+          "type": "integer"
+        },
+        "dependencies_count": {
+          "description": "The number of contracts imported by this contract",
+          "type": "integer"
+        },
+        "events": {
+          "description": "The events in the contract",
+          "type": "array"
+        },
+        "name": {
+          "description": "Contract name",
+          "type": "string"
+        },
+        "uuid": {
+          "description": "Contract uuid",
+          "type": "string"
+        }
+      },
+      "required": [
+        "events",
+        "dependants_count",
+        "dependencies_count",
+        "code",
+        "name",
+        "address",
+        "uuid"
+      ],
+      "title": "Contract",
+      "type": "object"
+    },
+    "PartialContract": {
+      "description": "Basic info of a contract on the network",
+      "example": {
+        "dependants_count": 10,
+        "dependencies_count": 10,
+        "uuid": "A.0b2a3299cc857e29.TopShot"
+      },
+      "properties": {
+        "dependants_count": {
+          "description": "The amount of contracts which import this contract",
+          "type": "integer"
+        },
+        "dependencies_count": {
+          "description": "The amount of contracts imported by this contract",
+          "type": "integer"
+        },
+        "uuid": {
+          "description": "Contract uuid",
+          "type": "string"
+        }
+      },
+      "required": [
+        "dependants_count",
+        "dependencies_count",
+        "uuid"
+      ],
+      "type": "object"
+    },
+    "PartialContracts": {
+      "description": "A collection of PartialContract",
+      "items": {
+        "$ref": "#/definitions/PartialContract"
+      },
+      "title": "PartialContracts",
+      "type": "array"
+    },
+    "Snippet": {
+      "description": "Snippet",
+      "example": {
+        "code": "pub event TokensDeposited(amount: UFix64, to: Address?)",
+        "code_hash": "DFFEFBF8AEBB86680E0EBABAF266F45B68A28188E3E17E81882465A910F1D80A",
+        "contracts_count": 160,
+        "type": "event"
+      },
+      "properties": {
+        "code": {
+          "description": "Snippet code",
+          "type": "string"
+        },
+        "code_hash": {
+          "description": "Snippet code hash",
+          "type": "string"
+        },
+        "contracts_count": {
+          "description": "Contracts using this snippet",
+          "type": "integer"
+        },
+        "type": {
+          "description": "Snippet type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "contracts_count",
+        "code_hash",
+        "code"
+      ],
+      "title": "Snippet",
+      "type": "object"
+    },
+    "Snippets": {
+      "description": "A collection of Snippet",
+      "items": {
+        "$ref": "#/definitions/Snippet"
+      },
+      "title": "Snippets",
+      "type": "array"
+    },
+    "Deployment": {
+      "description": "Deployment",
+      "example": {
+        "block_height": 23227064,
+        "block_timestamp": "2022-01-25T22:34:48.000000",
+        "tx_id": "4a03653ecdb5d8fdf11c9f5a967fa126dba725da11a4d87a5fb805478b23e5ee",
+        "type": "added"
+      },
+      "properties": {
+        "block_height": {
+          "description": "Block height of the deployment",
+          "type": "integer"
+        },
+        "block_timestamp": {
+          "description": "Block timestamp of the deployment",
+          "type": "string"
+        },
+        "tx_id": {
+          "description": "Transaction hash of the deployment",
+          "type": "string"
+        },
+        "type": {
+          "description": "Contract event type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "tx_id",
+        "block_timestamp",
+        "block_height"
+      ],
+      "title": "Deployment",
+      "type": "object"
+    },
+    "Deployments": {
+      "description": "A collection of Deployment",
+      "items": {
+        "$ref": "#/definitions/Deployment"
+      },
+      "title": "Deployments",
+      "type": "array"
+    },
     "UUIDs": {
       "example": {
         "dependencies": [
@@ -426,6 +315,74 @@
       ],
       "type": "object"
     },
+    "ContractResp": {
+      "description": "Contract resp",
+      "properties": {
+        "code": {
+          "description": "status code",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/Contract"
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "title": "ContractResp",
+      "type": "object"
+    },
+    "DeploymentsResp": {
+      "description": "Deployments resp",
+      "properties": {
+        "code": {
+          "description": "Status code",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/DeploymentsData"
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "title": "DeploymentsResp",
+      "type": "object"
+    },
+    "SnippetResp": {
+      "description": "Snippet resp",
+      "properties": {
+        "code": {
+          "description": "Status code",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/Snippet"
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "title": "SnippetResp",
+      "type": "object"
+    },
+    "SnippetsResp": {
+      "description": "Snippets resp",
+      "properties": {
+        "code": {
+          "description": "Status code",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/SnippetsData"
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "title": "SnippetsResp",
+      "type": "object"
+    },
     "UUIDsResp": {
       "description": "UUIDs resp",
       "properties": {
@@ -442,19 +399,63 @@
       ],
       "title": "UUIDsResp",
       "type": "object"
+    },
+    "PartialContractsData": {
+      "description": "PartialContracts data",
+      "properties": {
+        "contracts": {
+          "$ref": "#/definitions/PartialContracts"
+        },
+        "total_contracts_count": {
+          "description": "contracts count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "total_contracts_count"
+      ],
+      "title": "PartialContractsData",
+      "type": "object"
+    },
+    "SnippetsData": {
+      "description": "Snippets data",
+      "properties": {
+        "snippets": {
+          "$ref": "#/definitions/Snippets"
+        },
+        "total_snippets_count": {
+          "description": "snippets count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "total_snippets_count"
+      ],
+      "title": "SnippetsData",
+      "type": "object"
+    },
+    "DeploymentsData": {
+      "description": "Deployments data",
+      "properties": {
+        "deployments": {
+          "$ref": "#/definitions/Deployments"
+        },
+        "total_deployments_count": {
+          "description": "snippets count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "total_deployments_count"
+      ],
+      "title": "DeploymentsData",
+      "type": "object"
     }
   },
-  "host": "localhost:4000",
-  "info": {
-    "contact": {
-      "email": "lanford33@outlook.com",
-      "name": "lanford33"
-    },
-    "description": "API Documentation for FlowContractSyncer",
-    "termsOfService": "Open for public",
-    "title": "FlowContractSyncer API",
-    "version": "1.0.0"
-  },
+  "schemes": [
+    "https",
+    "http"
+  ],
   "paths": {
     "/api/v1/contracts": {
       "get": {
@@ -1624,38 +1625,37 @@
       }
     }
   },
+  "swagger": "2.0",
+  "consumes": [
+    "application/json"
+  ],
   "produces": [
     "application/json"
   ],
-  "schemes": [
-    "https",
-    "http"
-  ],
   "securityDefinitions": {
     "Bearer": {
-      "description": "API Token must be provided via `Authorization: Bearer ` header",
       "in": "header",
       "name": "Authorization",
-      "type": "apiKey"
+      "type": "apiKey",
+      "description": "API Token must be provided via `Authorization: Bearer ` header"
     }
   },
-  "swagger": "2.0",
   "tags": [
     {
-      "description": "System status",
-      "name": "Status"
+      "name": "Status",
+      "description": "System status"
     },
     {
-      "description": "Search APIs",
-      "name": "Search"
+      "name": "Search",
+      "description": "Search APIs"
     },
     {
-      "description": "Contract APIs",
-      "name": "Contracts"
+      "name": "Contracts",
+      "description": "Contract APIs"
     },
     {
-      "description": "Snippet APIs",
-      "name": "Snippets"
+      "name": "Snippets",
+      "description": "Snippet APIs"
     }
   ]
 }

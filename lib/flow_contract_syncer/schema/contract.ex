@@ -564,6 +564,8 @@ defmodule FlowContractSyncer.Schema.Contract do
       enums
     ]
     |> List.flatten()
+  rescue
+    _ -> []
   end
 
   def deps_unparsed(%Network{id: network_id}, limit \\ 100) do
