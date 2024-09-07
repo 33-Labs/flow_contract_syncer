@@ -124,7 +124,7 @@ defmodule FlowContractSyncer.Schema.Snippet do
 
   def get_resources(code) when is_binary(code) do
     regex =
-      ~r/^ *(pub|priv|access\(self\)|access\(contract\)|access\(all\)|access\(account\)|pub\(set\))? *resource *(?<name>(?!interface)[A-Za-z_][A-Za-z0-9_]*) *:?[^{}]+?(?<body>\{([^{}]*(?3)?)*+\})/m
+      ~r/^ *(access\(self\)|access\(contract\)|access\(all\)|access\([A-Za-z\.]+\))? *resource *(?<name>(?!interface)[A-Za-z_][A-Za-z0-9_]*) *:?[^{}]+?(?<body>\{([^{}]*(?3)?)*+\})/m
 
     Regex.scan(regex, code)
     |> Enum.map(fn [hd | _] -> hd end)
@@ -132,7 +132,7 @@ defmodule FlowContractSyncer.Schema.Snippet do
 
   def get_resource_interfaces(code) when is_binary(code) do
     regex =
-      ~r/^ *(pub|priv|access\(self\)|access\(contract\)|access\(all\)|access\(account\)|pub\(set\))? *resource *interface *(?<name>[A-Za-z_][A-Za-z0-9_]*) *:?[^{}]+?(?<body>\{([^{}]*(?3)?)*+\})/m
+      ~r/^ *(access\(self\)|access\(contract\)|access\(all\)|access\([A-Za-z\.]+\))? *resource *interface *(?<name>[A-Za-z_][A-Za-z0-9_]*) *:?[^{}]+?(?<body>\{([^{}]*(?3)?)*+\})/m
 
     Regex.scan(regex, code)
     |> Enum.map(fn [hd | _] -> hd end)
@@ -140,7 +140,7 @@ defmodule FlowContractSyncer.Schema.Snippet do
 
   def get_structs(code) when is_binary(code) do
     regex =
-      ~r/^ *(pub|priv|access\(self\)|access\(contract\)|access\(all\)|access\(account\)|pub\(set\))? *struct *(?<name>(?!interface)[A-Za-z_][A-Za-z0-9_]*) *:?[^{}]+?(?<body>\{([^{}]*(?3)?)*+\})/m
+      ~r/^ *(access\(self\)|access\(contract\)|access\(all\)|access\([A-Za-z\.]+\))? *struct *(?<name>(?!interface)[A-Za-z_][A-Za-z0-9_]*) *:?[^{}]+?(?<body>\{([^{}]*(?3)?)*+\})/m
 
     Regex.scan(regex, code)
     |> Enum.map(fn [hd | _] -> hd end)
@@ -148,7 +148,7 @@ defmodule FlowContractSyncer.Schema.Snippet do
 
   def get_struct_interfaces(code) when is_binary(code) do
     regex =
-      ~r/^ *(pub|priv|access\(self\)|access\(contract\)|access\(all\)|access\(account\)|pub\(set\))? *struct *interface *(?<name>[A-Za-z_][A-Za-z0-9_]*) *:?[^{}]+?(?<body>\{([^{}]*(?3)?)*+\})/m
+      ~r/^ *(access\(self\)|access\(contract\)|access\(all\)|access\([A-Za-z\.]+\))? *struct *interface *(?<name>[A-Za-z_][A-Za-z0-9_]*) *:?[^{}]+?(?<body>\{([^{}]*(?3)?)*+\})/m
 
     Regex.scan(regex, code)
     |> Enum.map(fn [hd | _] -> hd end)
@@ -156,7 +156,16 @@ defmodule FlowContractSyncer.Schema.Snippet do
 
   def get_functions_with_return(code) when is_binary(code) do
     regex =
-      ~r/^ *(pub|priv|access\(self\)|access\(contract\)|access\(all\)|access\(account\)|pub\(set\))? fun (?<name>[A-Za-z_][A-Za-z0-9_]*)\([^()]*\) *: *([A-Z\[\{\&\@][A-Za-z0-9_.\[\]\{\}\: \&\@]+[A-Za-z0-9_\]\}])(\{[A-Za-z0-9\ \,\.]*\})?\??[\ \n]*(?<body>\{([^{}]*(?5)?)*+\})/m
+      ~r/^ *(access\(self\)|access\(contract\)|access\(all\)|access\([A-Za-z\.]+\))? fun (?<name>[A-Za-z_][A-Za-z0-9_]*)\([^()]*\) *: *([A-Z\[\{\&\@][A-Za-z0-9_.\[\]\{\}\: \&\@]+[A-Za-z0-9_\]\}])(\{[A-Za-z0-9\ \,\.]*\})?\??[\ \n]*(?<body>\{([^{}]*(?5)?)*+\})/m
+
+    Regex.scan(regex, code)
+    |> Enum.map(fn [hd | _] -> hd end)
+    |> Enum.reject(&(!String.contains?(&1, "return ")))
+  end
+
+  def get_view_functions(code) when is_binary(code) do
+    regex =
+      ~r/^ *(access\(self\)|access\(contract\)|access\(all\)|access\([A-Za-z\.]+\))? view fun (?<name>[A-Za-z_][A-Za-z0-9_]*)\([^()]*\) *: *([A-Z\[\{\&\@][A-Za-z0-9_.\[\]\{\}\: \&\@]+[A-Za-z0-9_\]\}])(\{[A-Za-z0-9\ \,\.]*\})?\??[\ \n]*(?<body>\{([^{}]*(?5)?)*+\})/m
 
     Regex.scan(regex, code)
     |> Enum.map(fn [hd | _] -> hd end)
@@ -165,7 +174,7 @@ defmodule FlowContractSyncer.Schema.Snippet do
 
   def get_functions_without_return(code) when is_binary(code) do
     regex =
-      ~r/^ *(pub|priv|access\(self\)|access\(contract\)|access\(all\)|access\(account\)|pub\(set\))? *fun *(?<name>[A-Za-z_][A-Za-z0-9_]*) *\([^()]*\) *(?<body>\{([^{}]*(?3)?)*+\})/m
+      ~r/^ *(access\(self\)|access\(contract\)|access\(all\)|access\([A-Za-z\.]+\))? *fun *(?<name>[A-Za-z_][A-Za-z0-9_]*) *\([^()]*\) *(?<body>\{([^{}]*(?3)?)*+\})/m
 
     Regex.scan(regex, code)
     |> Enum.map(fn [hd | _] -> hd end)
@@ -173,7 +182,7 @@ defmodule FlowContractSyncer.Schema.Snippet do
 
   def get_enums(code) when is_binary(code) do
     regex =
-      ~r/^ *(pub|priv|access\(self\)|access\(contract\)|access\(all\)|access\(account\)|pub\(set\))? *enum *(?<name>[A-Za-z_][A-Za-z0-9_]*) *: *(UInt|Int)[^{}]+?(?<body>\{([^{}]*(?4)?)*+\})/m
+      ~r/^ *(access\(self\)|access\(contract\)|access\(all\)|access\([A-Za-z\.]+\))? *enum *(?<name>[A-Za-z_][A-Za-z0-9_]*) *: *(UInt|Int)[^{}]+?(?<body>\{([^{}]*(?4)?)*+\})/m
 
     Regex.scan(regex, code)
     |> Enum.map(fn [hd | _] -> hd end)
@@ -181,7 +190,7 @@ defmodule FlowContractSyncer.Schema.Snippet do
 
   def get_events(code) when is_binary(code) do
     regex =
-      ~r/^ *(pub|priv|access\(self\)|access\(contract\)|access\(all\)|access\(account\)|pub\(set\))? *event *(?<name>[A-Za-z_][A-Za-z0-9_]*) *\([^()]*\)/m
+      ~r/^ *(access\(self\)|access\(contract\)|access\(all\)|access\([A-Za-z\.]+\))? *event *(?<name>[A-Za-z_][A-Za-z0-9_]*) *\([^()]*\)/m
 
     Regex.scan(regex, code)
     |> Enum.map(fn [hd | _] -> hd end)

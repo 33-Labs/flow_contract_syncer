@@ -3,110 +3,14 @@
     "version": "1.0.0",
     "description": "API Documentation for FlowContractSyncer",
     "title": "FlowContractSyncer API",
+    "termsOfService": "Open for public",
     "contact": {
       "name": "lanford33",
       "email": "lanford33@outlook.com"
-    },
-    "termsOfService": "Open for public"
+    }
   },
   "host": "localhost:4000",
   "definitions": {
-    "Status": {
-      "description": "Network status",
-      "example": {
-        "contract_amount": 2437,
-        "contract_search_count": 100,
-        "last_sync_at": "2022-12-05T02:54:46",
-        "network": "mainnet",
-        "synced_height": 42168691
-      },
-      "properties": {
-        "contract_amount": {
-          "description": "Contracts amount synced",
-          "type": "integer"
-        },
-        "contract_search_count": {
-          "description": "The times of contract searched",
-          "type": "integer"
-        },
-        "last_sync_at": {
-          "description": "Last time of contract syncing",
-          "type": "datetime"
-        },
-        "network": {
-          "description": "Network name",
-          "type": "string"
-        },
-        "synced_height": {
-          "description": "The block height synced",
-          "type": "integer"
-        }
-      },
-      "required": [
-        "contract_search_count",
-        "synced_height",
-        "network",
-        "last_sync_at",
-        "contract_amount"
-      ],
-      "title": "Status",
-      "type": "object"
-    },
-    "StatusResp": {
-      "description": "Status resp",
-      "properties": {
-        "code": {
-          "description": "status code",
-          "type": "integer"
-        },
-        "data": {
-          "$ref": "#/definitions/Status"
-        }
-      },
-      "required": [
-        "code"
-      ],
-      "title": "StatusResp",
-      "type": "object"
-    },
-    "ErrorResp": {
-      "example": {
-        "code": 100,
-        "message": "unsupported"
-      },
-      "properties": {
-        "code": {
-          "description": "Error code",
-          "type": "integer"
-        },
-        "message": {
-          "description": "Error message",
-          "type": "string"
-        }
-      },
-      "required": [
-        "message",
-        "code"
-      ],
-      "type": "object"
-    },
-    "PartialContractsResp": {
-      "description": "PartialContracts resp",
-      "properties": {
-        "code": {
-          "description": "Status code",
-          "type": "integer"
-        },
-        "data": {
-          "$ref": "#/definitions/PartialContractsData"
-        }
-      },
-      "required": [
-        "code"
-      ],
-      "title": "PartialContractsResp",
-      "type": "object"
-    },
     "Contract": {
       "description": "A contract on the network",
       "example": {
@@ -163,6 +67,164 @@
       "title": "Contract",
       "type": "object"
     },
+    "Snippet": {
+      "description": "Snippet",
+      "example": {
+        "code": "access(all) event TokensDeposited(amount: UFix64, to: Address?)",
+        "code_hash": "DFFEFBF8AEBB86680E0EBABAF266F45B68A28188E3E17E81882465A910F1D80A",
+        "contracts_count": 160,
+        "type": "event"
+      },
+      "properties": {
+        "code": {
+          "description": "Snippet code",
+          "type": "string"
+        },
+        "code_hash": {
+          "description": "Snippet code hash",
+          "type": "string"
+        },
+        "contracts_count": {
+          "description": "Contracts using this snippet",
+          "type": "integer"
+        },
+        "type": {
+          "description": "Snippet type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "contracts_count",
+        "code_hash",
+        "code"
+      ],
+      "title": "Snippet",
+      "type": "object"
+    },
+    "SnippetResp": {
+      "description": "Snippet resp",
+      "properties": {
+        "code": {
+          "description": "Status code",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/Snippet"
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "title": "SnippetResp",
+      "type": "object"
+    },
+    "ErrorResp": {
+      "example": {
+        "code": 100,
+        "message": "unsupported"
+      },
+      "properties": {
+        "code": {
+          "description": "Error code",
+          "type": "integer"
+        },
+        "message": {
+          "description": "Error message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "message",
+        "code"
+      ],
+      "type": "object"
+    },
+    "PartialContractsResp": {
+      "description": "PartialContracts resp",
+      "properties": {
+        "code": {
+          "description": "Status code",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/PartialContractsData"
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "title": "PartialContractsResp",
+      "type": "object"
+    },
+    "SnippetsResp": {
+      "description": "Snippets resp",
+      "properties": {
+        "code": {
+          "description": "Status code",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/SnippetsData"
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "title": "SnippetsResp",
+      "type": "object"
+    },
+    "ContractResp": {
+      "description": "Contract resp",
+      "properties": {
+        "code": {
+          "description": "status code",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/Contract"
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "title": "ContractResp",
+      "type": "object"
+    },
+    "DeploymentsResp": {
+      "description": "Deployments resp",
+      "properties": {
+        "code": {
+          "description": "Status code",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/DeploymentsData"
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "title": "DeploymentsResp",
+      "type": "object"
+    },
+    "UUIDsResp": {
+      "description": "UUIDs resp",
+      "properties": {
+        "code": {
+          "description": "status code",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/UUIDs"
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "title": "UUIDsResp",
+      "type": "object"
+    },
     "PartialContract": {
       "description": "Basic info of a contract on the network",
       "example": {
@@ -198,41 +260,6 @@
       },
       "title": "PartialContracts",
       "type": "array"
-    },
-    "Snippet": {
-      "description": "Snippet",
-      "example": {
-        "code": "access(all) event TokensDeposited(amount: UFix64, to: Address?)",
-        "code_hash": "DFFEFBF8AEBB86680E0EBABAF266F45B68A28188E3E17E81882465A910F1D80A",
-        "contracts_count": 160,
-        "type": "event"
-      },
-      "properties": {
-        "code": {
-          "description": "Snippet code",
-          "type": "string"
-        },
-        "code_hash": {
-          "description": "Snippet code hash",
-          "type": "string"
-        },
-        "contracts_count": {
-          "description": "Contracts using this snippet",
-          "type": "integer"
-        },
-        "type": {
-          "description": "Snippet type",
-          "type": "string"
-        }
-      },
-      "required": [
-        "type",
-        "contracts_count",
-        "code_hash",
-        "code"
-      ],
-      "title": "Snippet",
-      "type": "object"
     },
     "Snippets": {
       "description": "A collection of Snippet",
@@ -315,91 +342,6 @@
       ],
       "type": "object"
     },
-    "ContractResp": {
-      "description": "Contract resp",
-      "properties": {
-        "code": {
-          "description": "status code",
-          "type": "integer"
-        },
-        "data": {
-          "$ref": "#/definitions/Contract"
-        }
-      },
-      "required": [
-        "code"
-      ],
-      "title": "ContractResp",
-      "type": "object"
-    },
-    "DeploymentsResp": {
-      "description": "Deployments resp",
-      "properties": {
-        "code": {
-          "description": "Status code",
-          "type": "integer"
-        },
-        "data": {
-          "$ref": "#/definitions/DeploymentsData"
-        }
-      },
-      "required": [
-        "code"
-      ],
-      "title": "DeploymentsResp",
-      "type": "object"
-    },
-    "SnippetResp": {
-      "description": "Snippet resp",
-      "properties": {
-        "code": {
-          "description": "Status code",
-          "type": "integer"
-        },
-        "data": {
-          "$ref": "#/definitions/Snippet"
-        }
-      },
-      "required": [
-        "code"
-      ],
-      "title": "SnippetResp",
-      "type": "object"
-    },
-    "SnippetsResp": {
-      "description": "Snippets resp",
-      "properties": {
-        "code": {
-          "description": "Status code",
-          "type": "integer"
-        },
-        "data": {
-          "$ref": "#/definitions/SnippetsData"
-        }
-      },
-      "required": [
-        "code"
-      ],
-      "title": "SnippetsResp",
-      "type": "object"
-    },
-    "UUIDsResp": {
-      "description": "UUIDs resp",
-      "properties": {
-        "code": {
-          "description": "status code",
-          "type": "integer"
-        },
-        "data": {
-          "$ref": "#/definitions/UUIDs"
-        }
-      },
-      "required": [
-        "code"
-      ],
-      "title": "UUIDsResp",
-      "type": "object"
-    },
     "PartialContractsData": {
       "description": "PartialContracts data",
       "properties": {
@@ -450,12 +392,102 @@
       ],
       "title": "DeploymentsData",
       "type": "object"
+    },
+    "StatusResp": {
+      "description": "Status resp",
+      "properties": {
+        "code": {
+          "description": "status code",
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/Status"
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "title": "StatusResp",
+      "type": "object"
+    },
+    "Status": {
+      "description": "Network status",
+      "example": {
+        "contract_amount": 2437,
+        "contract_search_count": 100,
+        "last_sync_at": "2022-12-05T02:54:46",
+        "network": "mainnet",
+        "synced_height": 42168691
+      },
+      "properties": {
+        "contract_amount": {
+          "description": "Contracts amount synced",
+          "type": "integer"
+        },
+        "contract_search_count": {
+          "description": "The times of contract searched",
+          "type": "integer"
+        },
+        "last_sync_at": {
+          "description": "Last time of contract syncing",
+          "type": "datetime"
+        },
+        "network": {
+          "description": "Network name",
+          "type": "string"
+        },
+        "synced_height": {
+          "description": "The block height synced",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "contract_search_count",
+        "synced_height",
+        "network",
+        "last_sync_at",
+        "contract_amount"
+      ],
+      "title": "Status",
+      "type": "object"
     }
   },
+  "produces": [
+    "application/json"
+  ],
+  "tags": [
+    {
+      "name": "Status",
+      "description": "System status"
+    },
+    {
+      "name": "Search",
+      "description": "Search APIs"
+    },
+    {
+      "name": "Contracts",
+      "description": "Contract APIs"
+    },
+    {
+      "name": "Snippets",
+      "description": "Snippet APIs"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
   "schemes": [
     "https",
     "http"
   ],
+  "securityDefinitions": {
+    "Bearer": {
+      "in": "header",
+      "name": "Authorization",
+      "type": "apiKey",
+      "description": "API Token must be provided via `Authorization: Bearer ` header"
+    }
+  },
   "paths": {
     "/api/v1/contracts": {
       "get": {
@@ -1625,37 +1657,5 @@
       }
     }
   },
-  "swagger": "2.0",
-  "consumes": [
-    "application/json"
-  ],
-  "produces": [
-    "application/json"
-  ],
-  "securityDefinitions": {
-    "Bearer": {
-      "in": "header",
-      "name": "Authorization",
-      "type": "apiKey",
-      "description": "API Token must be provided via `Authorization: Bearer ` header"
-    }
-  },
-  "tags": [
-    {
-      "name": "Status",
-      "description": "System status"
-    },
-    {
-      "name": "Search",
-      "description": "Search APIs"
-    },
-    {
-      "name": "Contracts",
-      "description": "Contract APIs"
-    },
-    {
-      "name": "Snippets",
-      "description": "Snippet APIs"
-    }
-  ]
+  "swagger": "2.0"
 }

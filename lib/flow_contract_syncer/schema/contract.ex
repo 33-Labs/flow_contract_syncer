@@ -531,6 +531,7 @@ defmodule FlowContractSyncer.Schema.Contract do
         get_structs: 1,
         get_struct_interfaces: 1,
         get_functions_with_return: 1,
+        get_view_functions: 1,
         get_functions_without_return: 1,
         get_enums: 1,
         get_events: 1
@@ -546,6 +547,7 @@ defmodule FlowContractSyncer.Schema.Contract do
     structs = source |> get_structs() |> Enum.map(&{&1, :struct})
     struct_interfaces = source |> get_struct_interfaces() |> Enum.map(&{&1, :struct_interface})
     functions_with_return = source |> get_functions_with_return() |> Enum.map(&{&1, :function})
+    view_functions = source |> get_view_functions() |> Enum.map(&{&1, :function})
 
     functions_without_return =
       source |> get_functions_without_return() |> Enum.map(&{&1, :function})
@@ -559,6 +561,7 @@ defmodule FlowContractSyncer.Schema.Contract do
       structs,
       struct_interfaces,
       functions_with_return,
+      view_functions,
       functions_without_return,
       events,
       enums
