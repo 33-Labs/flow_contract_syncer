@@ -191,8 +191,8 @@ defmodule FlowContractSyncer.ContractSyncer do
     """
     access(all) fun main(address: Address, contractName: String): [UInt8]? {
       let account = getAccount(address)
-      if let contract = account.contracts.get(name: contractName) {
-          return contract.code
+      if let c = account.contracts.get(name: contractName) {
+          return c.code
       }
       return nil
     }
