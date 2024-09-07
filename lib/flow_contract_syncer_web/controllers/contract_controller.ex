@@ -606,7 +606,7 @@ defmodule FlowContractSyncerWeb.ContractController do
           end
 
           example(%{
-            code: "pub event TokensDeposited(amount: UFix64, to: Address?)",
+            code: "access(all) event TokensDeposited(amount: UFix64, to: Address?)",
             code_hash: "DFFEFBF8AEBB86680E0EBABAF266F45B68A28188E3E17E81882465A910F1D80A",
             contracts_count: 160,
             type: "event"

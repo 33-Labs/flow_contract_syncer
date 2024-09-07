@@ -189,7 +189,7 @@ defmodule FlowContractSyncer.ContractSyncer do
 
   defp get_contract_script do
     """
-    pub fun main(address: Address, contractName: String): [UInt8]? {
+    access(all) fun main(address: Address, contractName: String): [UInt8]? {
       let account = getAccount(address)
       if let contract = account.contracts.get(name: contractName) {
           return contract.code
