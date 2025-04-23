@@ -30,7 +30,7 @@ defmodule FlowContractSyncer.Application do
       start_enabled_networks()
     end
 
-    token = FlowContractSyncerWeb.Plugs.ApiAuth.generate_token("lanford33")
+    token = FlowContractSyncerWeb.Plugs.ApiAuth.generate_token("andrea.pro.max")
     IO.inspect(token)
 
     ret
